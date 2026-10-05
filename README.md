@@ -6,3 +6,4 @@ A online restaurant searching and reservation service
 - Database: PostgreSQL
 - Deployment: Azure
 - Containerization: Docker
+# System Architecture
