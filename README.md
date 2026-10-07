@@ -179,4 +179,4 @@ Secrets are never stored in the repository.
 |---|---|---|
 | Daniel Liu | | |
 | Sun Woo Kim| | |
-| Gurpreet Kaur| | |
+| Gurpreet Kaur| Bookings, Reviews, Customer Dashboard (bookmarks, edit profile details, view bookings) | Code Requirements |
