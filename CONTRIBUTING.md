@@ -28,6 +28,7 @@ Guidelines for contributing to this project. Please follow these to keep our wor
 - Open one PR per issue. Don't group multiple features into one PR.
 - Keep PRs focused and small. Split a branch up if it grows too large.
 - Every PR needs **at least 1 review from a teammate** and a CodeRabbit check before merging.
+- Use **Squash and merge** when merging, so each PR becomes one clean commit on `main`.
 - Delete the branch after it's merged into `main`.
 
 ### PR Title Format
