@@ -1,4 +1,4 @@
-﻿namespace DineNDash.Tests;
+namespace DineNDash.Tests;
 
 public class Tests
 {
