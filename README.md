@@ -199,8 +199,8 @@ The app is deployed on a VPS. Only code merged into `main` is deployed.
 
 ## Team
 
-| Name | Contribution | Role |
+| Name | Role | Contribution |
 |---|---|---|
 | Daniel Liu | | |
 | Sun Woo Kim | | |
-| Gurpreet Kaur | Bookings, Reviews, Customer Dashboard (bookmarks, edit profile details, view bookings) | Code Requirements |
+| Gurpreet Kaur | Code Requirements | Bookings, Reviews, Customer Dashboard (bookmarks, edit profile details, view bookings) |
