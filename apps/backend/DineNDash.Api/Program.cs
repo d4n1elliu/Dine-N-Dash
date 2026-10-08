@@ -1,14 +1,17 @@
+using DineNDash.Api.Middleware;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Name of the CORS policy that lets the React app call this API
+// Keep the frontend policy name centralized so the app and middleware use the same origin rules.
 const string FrontendCorsPolicy = "Frontend";
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// Allow requests from the React app, which runs on a different port
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(FrontendCorsPolicy, policy =>
@@ -19,7 +22,10 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Only show the API docs while developing
+app.UseExceptionHandler();
+app.UseStatusCodePages();
+
+// Keep the interactive API docs local to development so production stays leaner and less noisy.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
