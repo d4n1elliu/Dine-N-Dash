@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-Guidelines for contributing to this project. Please follow these to keep our workflow clean and reviewable.
+This document explains the workflow for this project, to keep the commit history clean and every change easy to review.
 
 ## Issues
 
@@ -21,7 +21,7 @@ Guidelines for contributing to this project. Please follow these to keep our wor
 - Use the format `type(scope): short description`, with `backend` or `web` as the scope
   - Examples: `feat(backend): add restaurant search endpoint`, `fix(web): stop empty booking dates`
 - Write in the present tense, such as "add" instead of "added".
-- Add `Refs #13` to the description to link the commit to its issue.
+- Add `Refs #<issue-number>` to the description to link the commit to its issue.
 
 ## Pull Requests
 
@@ -50,13 +50,16 @@ Examples
 ```markdown
 @coderabbitai summary
 
+## Context
+Why this change is needed.
+
 ## How to test
 1. Steps to check the change works
 
-Closes #13
+Closes #<issue-number>
 ```
 
-`Closes #13` closes the issue automatically when the PR is merged.
+`Closes #<issue-number>` closes the issue automatically when the PR is merged.
 
 ### Before Opening a PR
 
