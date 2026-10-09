@@ -8,5 +8,6 @@ public interface IBookingService
     Task<IEnumerable<Booking>> GetForDinerAsync(int dinerId);
     Task<IEnumerable<Booking>> GetForRestaurantAsync(int restaurantId);
     Task<Booking> UpdateStatusAsync(int bookingId, BookingStatus status);
+    Task<bool> IsSlotAvailableAsync(int restaurantId, DateTime time, int partySize);
     Task CancelAsync(int bookingId, int dinerId);
 }
