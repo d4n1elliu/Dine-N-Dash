@@ -38,7 +38,7 @@ The backend is split into separate projects so each layer has one responsibility
 | `DineNDash.Api` | Controllers, request and response models, error handling |
 | `DineNDash.Core` | Models, enums, interfaces, services and business logic |
 | `DineNDash.Data` | Entity Framework DbContext, repositories and migrations |
-| `DineNDash.Tests` | NUnit tests for the services in Core |
+| `DineNDash.Tests` | NUnit tests for the Core project |
 
 `DineNDash.Core` has no dependency on the database or the API, which keeps the business logic easy to test.
 
@@ -60,13 +60,13 @@ Dine-N-Dash/
     │   ├── src/
     │   │   ├── App.tsx                  Root component
     │   │   ├── index.css                Tailwind import and global styles
-    │   │   └── main.tsx                 App entry point
+    │   │   └── main.tsx                 Frontend entry point
     │   ├── .gitignore
     │   ├── eslint.config.js             Linting rules
-    │   ├── index.html                   HTML shell the app loads into
+    │   ├── index.html                   HTML shell the frontend loads into
     │   ├── package-lock.json
     │   ├── package.json                 Dependencies and npm scripts
-    │   ├── tsconfig.app.json            TypeScript settings for the app
+    │   ├── tsconfig.app.json            TypeScript settings for the frontend
     │   ├── tsconfig.json                Root TypeScript config
     │   ├── tsconfig.node.json           TypeScript settings for Vite config
     │   └── vite.config.ts               Vite and Tailwind setup
@@ -80,10 +80,11 @@ Dine-N-Dash/
         │   │   └── launchSettings.json  Local ports and run settings
         │   ├── appsettings.json
         │   ├── DineNDash.Api.csproj
-        │   └── Program.cs               App startup, services and CORS
+        │   └── Program.cs               API startup, services, database and CORS
         │
         ├── DineNDash.Core/              Business logic
         │   ├── Enums/                   Fixed values such as cuisine type and booking status
+        │   ├── Exceptions/              Custom error types with their own status codes
         │   ├── Extensions/              Extension methods
         │   ├── Interfaces/              Service and repository interfaces
         │   ├── Models/                  Restaurants, menu items, bookings, reviews and user accounts
@@ -92,11 +93,12 @@ Dine-N-Dash/
         │
         ├── DineNDash.Data/              Database layer
         │   ├── Migrations/              Entity Framework migrations
-        │   ├── Repositories/            Generic and specific repositories
+        │   ├── Repositories/            Generic repository for all models
         │   ├── AppDbContext.cs          Entity Framework database context
         │   └── DineNDash.Data.csproj
         │
         └── DineNDash.Tests/             NUnit tests
+            ├── Extensions/              Tests for the extension methods
             ├── Services/                Tests for the Core services
             └── DineNDash.Tests.csproj
 ```
@@ -107,6 +109,7 @@ Dine-N-Dash/
 - .NET 10 SDK
 - Node.js 22 LTS or later
 - Docker Desktop
+- DBeaver or pgAdmin, optional, for viewing and editing the database
 
 ## Getting Started
 
@@ -132,12 +135,7 @@ cd apps/backend/DineNDash.Api
 dotnet user-secrets set "ConnectionStrings:Default" "Host=localhost;Port=5432;Database=dinendash;Username=postgres;Password=yourpassword"
 ```
 
-Apply the database migrations.
-
-```bash
-dotnet tool install --global dotnet-ef
-dotnet ef database update --project ../DineNDash.Data --startup-project .
-```
+The initial migration is included in `DineNDash.Data/Migrations`. When the backend runs in development, it applies any pending migrations automatically and creates the database tables, so no manual migration commands are needed.
 
 ### 3. Run the backend
 
@@ -173,6 +171,30 @@ Open the link shown in the terminal, usually `http://localhost:5173`.
 docker compose down
 ```
 
+## Working with the Database
+
+### Viewing and editing data
+
+The sample restaurant, menu and user data was entered directly into PostgreSQL using DBeaver. To view or edit the data, open DBeaver, create a new PostgreSQL connection and enter these details.
+
+| Field | Value |
+|---|---|
+| Host | `localhost` |
+| Port | `5432` |
+| Database | `dinendash` |
+| Username | `postgres` |
+| Password | the password set in `.env` |
+
+Once connected, expand **dinendash → Schemas → public → Tables** to see the `Users`, `Restaurants`, `MenuItems`, `Bookings` and `Reviews` tables. Double-click a table and open the **Data** tab to view or edit rows.
+
+### Adding a migration
+
+If the models in `DineNDash.Core` change, create a new migration from `apps/backend/DineNDash.Api`. It applies automatically the next time the backend runs.
+
+```bash
+dotnet ef migrations add <MigrationName> --project ../DineNDash.Data --startup-project .
+```
+
 ## Running Tests
 
 **In Visual Studio 2026** open **Test → Test Explorer** and click **Run All Tests**.
@@ -195,7 +217,7 @@ Secrets are never stored in the repository.
 
 ## Deployment
 
-The app is deployed on a VPS. Only code merged into `main` is deployed.
+The website is deployed on a VPS. Only code merged into `main` is deployed.
 
 ## Team
 
