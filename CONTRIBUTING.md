@@ -18,8 +18,8 @@ This document explains the workflow for this project, to keep the commit history
 
 ## Commits
 
-- Use the format `type(scope): short description`, with `backend` or `web` as the scope
-  - Examples: `feat(backend): add restaurant search endpoint`, `fix(web): stop empty booking dates`
+- Use the format `type(scope): short description`, with `server` or `client` as the scope
+  - Examples: `feat(server): add restaurant search endpoint`, `fix(client): stop empty booking dates`
 - Write in the present tense, such as "add" instead of "added".
 - Add `Refs #<issue-number>` to the description to link the commit to its issue.
 
@@ -36,14 +36,14 @@ This document explains the workflow for this project, to keep the commit history
 Use the format `type(scope): short description`
 
 - **type** is one of `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `style`
-- **scope** is `backend` or `web`
+- **scope** is `server` or `client`
 
 Examples
 
-- `feat(backend): create account endpoint`
-- `feat(web): restaurant search page`
-- `fix(web): login validation error`
-- `chore(backend): update dependencies`
+- `feat(server): create account endpoint`
+- `feat(client): restaurant search page`
+- `fix(client): login validation error`
+- `chore(server): update dependencies`
 
 ### PR Description
 
@@ -64,8 +64,8 @@ Closes #<issue-number>
 ### Before Opening a PR
 
 - `dotnet build` and `dotnet test` pass
-- `npm run lint` passes in `apps/web`
-- The change works when the app is running
+- `npm run lint` passes in `client`
+- The change works when the website is running
 - No `.env` files, passwords or API keys are committed
 
 ## Code
@@ -78,7 +78,7 @@ Closes #<issue-number>
 
 ## Deployment
 
-- The app is deployed on a VPS instead of Microsoft Azure.
+- The website is deployed on a VPS instead of Microsoft Azure.
 - Only code merged into `main` gets deployed.
 - Never commit server passwords, SSH keys or VPS details to the repo.
 
