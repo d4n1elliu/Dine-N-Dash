@@ -1,9 +1,12 @@
 using DineNDash.Api.Middleware;
+using DineNDash.Core.Interfaces;
+using DineNDash.Data;
+using DineNDash.Data.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Keep the frontend policy name centralized so the app and middleware use the same origin rules.
 const string FrontendCorsPolicy = "Frontend";
 
 builder.Services.AddControllers();
@@ -11,6 +14,11 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 builder.Services.AddCors(options =>
 {
@@ -22,10 +30,16 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+}
+
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
-// Keep the interactive API docs local to development so production stays leaner and less noisy.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
