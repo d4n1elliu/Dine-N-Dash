@@ -224,4 +224,4 @@ The website is deployed on a VPS. Only code merged into `main` is deployed.
 |---|---|---|
 | Daniel Liu | Code Quality, Code Requirements | Project setup, backend architecture, database with Entity Framework, core models and interfaces |
 | Sun Woo Kim | | |
-| Gurpreet Kaur | Code Requirements | Bookings, Reviews, Customer Dashboard (bookmarks, edit profile details, view bookings) |
+| Gurpreet Kaur | Interface Design, Code Requirements | Bookings, Reviews, Customer Dashboard (bookmarks, edit profile details, view bookings) |
