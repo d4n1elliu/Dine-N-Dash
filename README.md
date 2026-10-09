@@ -52,55 +52,54 @@ Dine-N-Dash/
 ├── DineNDash.sln                        Solution file, open this in Visual Studio 2026
 ├── docker-compose.yml                   Runs PostgreSQL in Docker
 ├── README.md
-└── apps/
-    ├── web/                             React frontend
-    │   ├── public/
-    │   │   ├── favicon.svg              Browser tab icon
-    │   │   └── icons.svg                Icon sprite
-    │   ├── src/
-    │   │   ├── App.tsx                  Root component
-    │   │   ├── index.css                Tailwind import and global styles
-    │   │   └── main.tsx                 Frontend entry point
-    │   ├── .gitignore
-    │   ├── eslint.config.js             Linting rules
-    │   ├── index.html                   HTML shell the frontend loads into
-    │   ├── package-lock.json
-    │   ├── package.json                 Dependencies and npm scripts
-    │   ├── tsconfig.app.json            TypeScript settings for the frontend
-    │   ├── tsconfig.json                Root TypeScript config
-    │   ├── tsconfig.node.json           TypeScript settings for Vite config
-    │   └── vite.config.ts               Vite and Tailwind setup
+├── client/                              React frontend
+│   ├── public/
+│   │   ├── favicon.svg                  Browser tab icon
+│   │   └── icons.svg                    Icon sprite
+│   ├── src/
+│   │   ├── App.tsx                      Root component
+│   │   ├── index.css                    Tailwind import and global styles
+│   │   └── main.tsx                     Frontend entry point
+│   ├── .gitignore
+│   ├── eslint.config.js                 Linting rules
+│   ├── index.html                       HTML shell the frontend loads into
+│   ├── package-lock.json
+│   ├── package.json                     Dependencies and npm scripts
+│   ├── tsconfig.app.json                TypeScript settings for the frontend
+│   ├── tsconfig.json                    Root TypeScript config
+│   ├── tsconfig.node.json               TypeScript settings for Vite config
+│   └── vite.config.ts                   Vite and Tailwind setup
+│
+└── server/                              C# backend
+    ├── DineNDash.Api/                   ASP.NET Core Web API
+    │   ├── Controllers/                 API endpoints
+    │   ├── DTOs/                        Request and response models
+    │   ├── Middleware/                  Global error handling
+    │   ├── Properties/
+    │   │   └── launchSettings.json      Local ports and run settings
+    │   ├── appsettings.json
+    │   ├── DineNDash.Api.csproj
+    │   └── Program.cs                   API startup, services, database and CORS
     │
-    └── backend/                         C# backend
-        ├── DineNDash.Api/               ASP.NET Core Web API
-        │   ├── Controllers/             API endpoints
-        │   ├── DTOs/                    Request and response models
-        │   ├── Middleware/              Global error handling
-        │   ├── Properties/
-        │   │   └── launchSettings.json  Local ports and run settings
-        │   ├── appsettings.json
-        │   ├── DineNDash.Api.csproj
-        │   └── Program.cs               API startup, services, database and CORS
-        │
-        ├── DineNDash.Core/              Business logic
-        │   ├── Enums/                   Fixed values such as cuisine type and booking status
-        │   ├── Exceptions/              Custom error types with their own status codes
-        │   ├── Extensions/              Extension methods
-        │   ├── Interfaces/              Service and repository interfaces
-        │   ├── Models/                  Restaurants, menu items, bookings, reviews and user accounts
-        │   ├── Services/                Search, filtering and validation using LINQ
-        │   └── DineNDash.Core.csproj
-        │
-        ├── DineNDash.Data/              Database layer
-        │   ├── Migrations/              Entity Framework migrations
-        │   ├── Repositories/            Generic repository for all models
-        │   ├── AppDbContext.cs          Entity Framework database context
-        │   └── DineNDash.Data.csproj
-        │
-        └── DineNDash.Tests/             NUnit tests
-            ├── Extensions/              Tests for the extension methods
-            ├── Services/                Tests for the Core services
-            └── DineNDash.Tests.csproj
+    ├── DineNDash.Core/                  Business logic
+    │   ├── Enums/                       Fixed values such as cuisine type and booking status
+    │   ├── Exceptions/                  Custom error types with their own status codes
+    │   ├── Extensions/                  Extension methods
+    │   ├── Interfaces/                  Service and repository interfaces
+    │   ├── Models/                      Restaurants, menu items, bookings, reviews and user accounts
+    │   ├── Services/                    Search, filtering and validation using LINQ
+    │   └── DineNDash.Core.csproj
+    │
+    ├── DineNDash.Data/                  Database layer
+    │   ├── Migrations/                  Entity Framework migrations
+    │   ├── Repositories/                Generic repository for all models
+    │   ├── AppDbContext.cs              Entity Framework database context
+    │   └── DineNDash.Data.csproj
+    │
+    └── DineNDash.Tests/                 NUnit tests
+        ├── Extensions/                  Tests for the extension methods
+        ├── Services/                    Tests for the Core services
+        └── DineNDash.Tests.csproj
 ```
 
 ## Prerequisites
@@ -131,7 +130,7 @@ docker compose up -d
 Store the connection string with .NET User Secrets so it never gets committed. Use the same password you set in `.env`.
 
 ```bash
-cd apps/backend/DineNDash.Api
+cd server/DineNDash.Api
 dotnet user-secrets set "ConnectionStrings:Default" "Host=localhost;Port=5432;Database=dinendash;Username=postgres;Password=yourpassword"
 ```
 
@@ -148,17 +147,17 @@ The initial migration is included in `DineNDash.Data/Migrations`. When the backe
 **From the terminal**
 
 ```bash
-dotnet run --project apps/backend/DineNDash.Api
+dotnet run --project server/DineNDash.Api
 ```
 
 The API docs open at `http://localhost:5166/scalar`.
 
 ### 4. Run the frontend
 
-Copy `apps/web/.env.example` to `apps/web/.env` and set `VITE_API_URL` to the URL the backend is running on.
+Copy `client/.env.example` to `client/.env` and set `VITE_API_URL` to the URL the backend is running on.
 
 ```bash
-cd apps/web
+cd client
 npm install
 npm run dev
 ```
@@ -189,7 +188,7 @@ Once connected, expand **dinendash → Schemas → public → Tables** to see th
 
 ### Adding a migration
 
-If the models in `DineNDash.Core` change, create a new migration from `apps/backend/DineNDash.Api`. It applies automatically the next time the backend runs.
+If the models in `DineNDash.Core` change, create a new migration from `server/DineNDash.Api`. It applies automatically the next time the backend runs.
 
 ```bash
 dotnet ef migrations add <MigrationName> --project ../DineNDash.Data --startup-project .
@@ -213,7 +212,7 @@ Secrets are never stored in the repository.
 |---|---|
 | `.env` in the repo root | Database settings used by Docker |
 | .NET User Secrets | Database connection string and any private API keys |
-| `apps/web/.env` | Public frontend settings such as `VITE_API_URL` |
+| `client/.env` | Public frontend settings such as `VITE_API_URL` |
 
 ## Deployment
 
@@ -223,6 +222,6 @@ The website is deployed on a VPS. Only code merged into `main` is deployed.
 
 | Name | Role | Contribution |
 |---|---|---|
-| Daniel Liu | | |
+| Daniel Liu | Code Quality, Code Requirements | Project setup, backend architecture, database with Entity Framework, core models and interfaces |
 | Sun Woo Kim | | |
 | Gurpreet Kaur | Code Requirements | Bookings, Reviews, Customer Dashboard (bookmarks, edit profile details, view bookings) |
