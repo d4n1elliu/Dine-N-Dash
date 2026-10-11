@@ -4,6 +4,7 @@ using DineNDash.Data;
 using DineNDash.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
+using DineNDash.Core.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
 
 builder.Services.AddCors(options =>
 {
