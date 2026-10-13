@@ -1,3 +1,4 @@
+import { startTransition } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { ROUTES } from '../routes'
@@ -12,8 +13,10 @@ export default function Layout() {
   const navigate = useNavigate()
 
   function handleLogout() {
-    logout()
-    navigate(ROUTES.home)
+    startTransition(() => {
+      logout()
+      navigate(ROUTES.home)
+    })
   }
 
   return (
