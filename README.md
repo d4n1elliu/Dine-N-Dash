@@ -46,7 +46,7 @@ The backend is split into separate projects so each layer has one responsibility
 
 ```text
 Dine-N-Dash/
-├── .env.example                         Example Docker database settings
+├── .env.example                         Example Docker database and frontend settings
 ├── .gitignore
 ├── CONTRIBUTING.md                      Team workflow and conventions
 ├── DineNDash.sln                        Solution file, open this in Visual Studio 2026
@@ -57,7 +57,12 @@ Dine-N-Dash/
 │   │   ├── favicon.svg                  Browser tab icon
 │   │   └── icons.svg                    Icon sprite
 │   ├── src/
-│   │   ├── App.tsx                      Root component
+│   │   ├── api/                         API client and request helpers
+│   │   ├── components/                  Shared components such as Layout and ProtectedRoute
+│   │   ├── context/                     Auth context, useAuth hook and session storage
+│   │   ├── hooks/                       Reusable hooks such as useApi
+│   │   ├── pages/                       One file per page
+│   │   ├── App.tsx                      Routes
 │   │   ├── index.css                    Tailwind import and global styles
 │   │   └── main.tsx                     Frontend entry point
 │   ├── .gitignore
@@ -154,7 +159,7 @@ The API docs open at `http://localhost:5166/scalar`.
 
 ### 4. Run the frontend
 
-Copy `client/.env.example` to `client/.env` and set `VITE_API_URL` to the URL the backend is running on.
+The frontend reads `VITE_API_URL` from the same `.env` in the repo root. Set it to the URL the backend is running on, `http://localhost:5166` by default.
 
 ```bash
 cd client
@@ -210,9 +215,8 @@ Secrets are never stored in the repository.
 
 | Where | What goes there |
 |---|---|
-| `.env` in the repo root | Database settings used by Docker |
+| `.env` in the repo root | Database settings used by Docker and public frontend settings such as `VITE_API_URL` |
 | .NET User Secrets | Database connection string and any private API keys |
-| `client/.env` | Public frontend settings such as `VITE_API_URL` |
 
 ## Deployment
 
