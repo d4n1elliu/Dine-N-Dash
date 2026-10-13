@@ -5,6 +5,9 @@ using DineNDash.Core.Interfaces;
 using DineNDash.Core.Models;
 
 namespace DineNDash.Core.Services;
+/// <summary>
+/// Booking rules: validation, capacity checks and cancellation.
+/// </summary>
 public class BookingService : IBookingService 
 {
     private IRepository<Booking> _bookings;

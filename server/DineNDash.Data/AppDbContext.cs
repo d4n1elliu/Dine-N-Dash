@@ -2,6 +2,9 @@ using DineNDash.Core.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DineNDash.Data;
+/// <summary>
+/// EF Core context for the DineNDash database.
+/// </summary>
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
     public DbSet<User> Users => Set<User>();

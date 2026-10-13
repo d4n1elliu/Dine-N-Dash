@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DineNDash.Api.Controllers;
 
+/// <summary>
+/// Creates, lists, updates and cancels table bookings.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class BookingController : ControllerBase 

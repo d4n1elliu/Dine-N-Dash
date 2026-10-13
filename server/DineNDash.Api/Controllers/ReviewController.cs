@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DineNDash.Api.Controllers;
 
+/// <summary>
+/// Creates, edits, deletes and lists restaurant reviews.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class ReviewController : ControllerBase 
@@ -65,7 +68,7 @@ public class ReviewController : ControllerBase
         var reviews = await _reviewService.GetForRestaurantAsync(restaurantId);
         return Ok(reviews.Select(ToResponse));
     }
-
+    
     [HttpGet("restaurant/{restaurantId}/average")]
     public async Task<IActionResult> GetAverage(int restaurantId) 
     {

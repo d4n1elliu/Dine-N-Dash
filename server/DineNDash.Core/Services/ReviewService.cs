@@ -3,6 +3,9 @@ using DineNDash.Core.Interfaces;
 using DineNDash.Core.Models;
 
 namespace DineNDash.Core.Services;
+/// <summary>
+/// Review rules: one review per diner per restaurant, ownership checks and averages.
+/// </summary>
 public class ReviewService : IReviewService 
 {
     private IRepository<Review> _reviews;
