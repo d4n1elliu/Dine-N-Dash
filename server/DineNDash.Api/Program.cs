@@ -1,3 +1,4 @@
+using DineNDash.Api.Extensions;
 using DineNDash.Api.Middleware;
 using DineNDash.Core.Interfaces;
 using DineNDash.Data;
@@ -22,6 +23,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddJwtAuthentication(builder.Configuration);
 
 builder.Services.AddCors(options =>
 {
@@ -51,6 +53,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors(FrontendCorsPolicy);
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 

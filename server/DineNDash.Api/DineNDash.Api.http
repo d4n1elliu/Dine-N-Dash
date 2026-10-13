@@ -4,3 +4,31 @@ GET {{DineNDash.Api_HostAddress}}/api/health
 Accept: application/json
 
 ###
+
+POST {{DineNDash.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "diner@example.com",
+  "password": "Password123",
+  "name": "Test Diner",
+  "role": "Diner"
+}
+
+###
+
+POST {{DineNDash.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "diner@example.com",
+  "password": "Password123"
+}
+
+###
+
+# Paste the token from the login response after "Bearer "
+GET {{DineNDash.Api_HostAddress}}/api/auth/me
+Authorization: Bearer <token>
+
+###

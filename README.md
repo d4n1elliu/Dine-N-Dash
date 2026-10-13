@@ -79,6 +79,7 @@ Dine-N-Dash/
     ├── DineNDash.Api/                   ASP.NET Core Web API
     │   ├── Controllers/                 API endpoints
     │   ├── DTOs/                        Request and response models
+    │   ├── Extensions/                  Startup helpers such as JWT authentication setup
     │   ├── Middleware/                  Global error handling
     │   ├── Properties/
     │   │   └── launchSettings.json      Local ports and run settings
@@ -93,6 +94,7 @@ Dine-N-Dash/
     │   ├── Interfaces/                  Service and repository interfaces
     │   ├── Models/                      Restaurants, menu items, bookings, reviews and user accounts
     │   ├── Services/                    Search, filtering and validation using LINQ
+    │   ├── Settings/                    Configuration classes such as JwtSettings
     │   └── DineNDash.Core.csproj
     │
     ├── DineNDash.Data/                  Database layer
@@ -103,6 +105,7 @@ Dine-N-Dash/
     │
     └── DineNDash.Tests/                 NUnit tests
         ├── Extensions/                  Tests for the extension methods
+        ├── Fakes/                       In-memory repository used instead of the database
         ├── Services/                    Tests for the Core services
         └── DineNDash.Tests.csproj
 ```
@@ -137,6 +140,12 @@ Store the connection string with .NET User Secrets so it never gets committed. U
 ```bash
 cd server/DineNDash.Api
 dotnet user-secrets set "ConnectionStrings:Default" "Host=localhost;Port=5432;Database=dinendash;Username=postgres;Password=yourpassword"
+```
+
+Also store a signing key for login tokens. Use any random string of at least 32 characters.
+
+```bash
+dotnet user-secrets set "Jwt:Key" "replace-this-with-a-long-random-string-of-your-own"
 ```
 
 The initial migration is included in `DineNDash.Data/Migrations`. When the backend runs in development, it applies any pending migrations automatically and creates the database tables, so no manual migration commands are needed.
@@ -216,7 +225,7 @@ Secrets are never stored in the repository.
 | Where | What goes there |
 |---|---|
 | `.env` in the repo root | Database settings used by Docker and public frontend settings such as `VITE_API_URL` |
-| .NET User Secrets | Database connection string and any private API keys |
+| .NET User Secrets | Database connection string, JWT signing key and any private API keys |
 
 ## Deployment
 
