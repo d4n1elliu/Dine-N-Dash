@@ -7,7 +7,6 @@ import FormField from '../components/FormField'
 import TextLink from '../components/TextLink'
 import { useAuth } from '../context/useAuth'
 import { useSubmit } from '../hooks/useSubmit'
-import { isValidEmail } from '../lib/validation'
 import { ROUTES, type RedirectState } from '../routes'
 
 export default function LoginPage() {
@@ -27,8 +26,8 @@ export default function LoginPage() {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    if (!isValidEmail(email)) {
-      setError('Enter a valid email address.')
+    if (email.trim().length === 0) {
+      setError('Enter your email address.')
       return
     }
     if (password.length === 0) {
