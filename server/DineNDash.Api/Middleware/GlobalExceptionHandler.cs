@@ -14,7 +14,7 @@ public class GlobalExceptionHandler(
     IHostEnvironment environment) : IExceptionHandler
 {
     /// <summary>
-    /// Maps the exception to a ProblemDetails response, hiding internal messages outside development
+    /// Maps the exception to a ProblemDetails response; AppException messages are always shown, other messages only in development
     /// </summary>
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
