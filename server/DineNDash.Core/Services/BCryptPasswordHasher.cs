@@ -13,7 +13,7 @@ public class BCryptPasswordHasher : IPasswordHasher
     public string Hash(string password) => BCrypt.Net.BCrypt.HashPassword(password);
 
     /// <summary>
-    /// Returns true when the password matches the hash, and false for any hash BCrypt cannot parse
+    /// Returns true when the password matches the hash, and false on a mismatch or SaltParseException
     /// </summary>
     public bool Verify(string password, string passwordHash)
     {
