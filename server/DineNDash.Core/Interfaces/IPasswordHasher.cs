@@ -1,7 +1,7 @@
 namespace DineNDash.Core.Interfaces;
 
 /// <summary>
-/// Keeps passwords out of the database; only the hash is ever stored or compared
+/// Produces password hashes for storage and verifies supplied passwords against those hashes.
 /// </summary>
 public interface IPasswordHasher
 {
