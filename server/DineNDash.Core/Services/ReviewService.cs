@@ -4,7 +4,7 @@ using DineNDash.Core.Models;
 
 namespace DineNDash.Core.Services;
 /// <summary>
-/// Review rules: one review per diner per restaurant, ownership checks and averages.
+/// Review rules: one review per diner per restaurant, ownership checks and averages
 /// </summary>
 public class ReviewService : IReviewService 
 {
@@ -17,6 +17,9 @@ public class ReviewService : IReviewService
         _restaurants = restaurants; 
     }
 
+    /// <summary>
+    /// Validates the review, requires the restaurant to exist and allows one review per diner per restaurant
+    /// </summary>
     public async Task<Review> CreateAsync(Review review) 
     { 
         review.Validate(); 
@@ -39,6 +42,9 @@ public class ReviewService : IReviewService
         return await _reviews.AddAsync(review); 
     }
 
+    /// <summary>
+    /// Lets only the author change the rating and comment
+    /// </summary>
     public async Task<Review> UpdateAsync(Review review, int dinerId) 
     { 
         var existing = await _reviews.GetByIdAsync(review.Id) ?? throw new NotFoundException("Unable to find review.");
@@ -57,6 +63,9 @@ public class ReviewService : IReviewService
         return existing;
     }
 
+    /// <summary>
+    /// Returns a diner's reviews, newest first
+    /// </summary>
     public async Task<IEnumerable<Review>> GetForDinerAsync(int dinerId) 
     { 
         var allReviews = await _reviews.GetAllAsync();
@@ -65,6 +74,9 @@ public class ReviewService : IReviewService
                          .ToList();
     }
 
+    /// <summary>
+    /// Returns a restaurant's reviews, newest first
+    /// </summary>
     public async Task<IEnumerable<Review>> GetForRestaurantAsync(int restaurantId) 
     { 
         var allReviews = await _reviews.GetAllAsync();
@@ -73,6 +85,9 @@ public class ReviewService : IReviewService
                          .ToList();
     }
 
+    /// <summary>
+    /// Averages the restaurant's ratings, returning 0 when it has none
+    /// </summary>
     public async Task<double> GetAverageRatingAsync(int restaurantId) 
     { 
         var allReviews = await _reviews.GetAllAsync();
@@ -88,6 +103,9 @@ public class ReviewService : IReviewService
         return ratings.Average(); 
     }
 
+    /// <summary>
+    /// Deletes a review only for the diner who wrote it
+    /// </summary>
     public async Task DeleteAsync(int reviewId, int dinerId) 
     {
         var review = await _reviews.GetByIdAsync(reviewId) ?? throw new NotFoundException("Unable to find review."); 

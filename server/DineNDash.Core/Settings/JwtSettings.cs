@@ -1,4 +1,8 @@
 namespace DineNDash.Core.Settings;
+
+/// <summary>
+/// Signing key, issuer, audience and lifetime bound from the Jwt configuration section
+/// </summary>
 public class JwtSettings
 {
     public string Key { get; set; } = string.Empty;

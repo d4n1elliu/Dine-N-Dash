@@ -1,4 +1,8 @@
 namespace DineNDash.Core.Models;
+
+/// <summary>
+/// A dish on a restaurant's menu with its price and category
+/// </summary>
 public class MenuItem : BaseEntity
 {
     public string Name { get; set; } = string.Empty;

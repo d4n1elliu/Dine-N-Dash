@@ -9,10 +9,13 @@ using Microsoft.IdentityModel.Tokens;
 namespace DineNDash.Core.Services;
 
 /// <summary>
-/// Token service that signs JWTs with the symmetric key from JwtSettings.
+/// Token service that signs JWTs with the symmetric key from JwtSettings
 /// </summary>
 public class JwtTokenService(JwtSettings settings) : ITokenService
 {
+    /// <summary>
+    /// Issues a signed token carrying the user's id, email, name and role that expires after ExpiryMinutes
+    /// </summary>
     public string CreateToken(User user)
     {
         var claims = new[]

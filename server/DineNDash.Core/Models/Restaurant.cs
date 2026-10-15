@@ -1,6 +1,10 @@
 using DineNDash.Core.Enums;
 
 namespace DineNDash.Core.Models;
+
+/// <summary>
+/// A venue diners can search, book and review, owned by one RestaurantAccount
+/// </summary>
 public class Restaurant : BaseEntity
 {
     public string Name { get; set; } = string.Empty;

@@ -1,6 +1,10 @@
 using DineNDash.Core.Enums;
 
 namespace DineNDash.Core.Models;
+
+/// <summary>
+/// A diner's table reservation at a restaurant for a given time and party size
+/// </summary>
 public class Booking : BaseEntity
 {
     public DateTime BookingTime { get; set; }
