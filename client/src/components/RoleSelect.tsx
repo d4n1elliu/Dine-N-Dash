@@ -17,7 +17,7 @@ export default function RoleSelect({ value, onChange, legend = 'I want to' }: Ro
           return (
             <label
               key={option.value}
-              className={`cursor-pointer rounded border px-3 py-2 text-sm transition ${
+              className={`cursor-pointer rounded border px-3 py-2 text-sm transition focus-within:ring-2 focus-within:ring-orange-500 focus-within:ring-offset-1 ${
                 selected
                   ? 'border-orange-600 bg-orange-50 ring-1 ring-orange-600'
                   : 'border-gray-300 hover:border-orange-300'
