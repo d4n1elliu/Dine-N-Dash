@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DineNDash.Data;
 /// <summary>
-/// EF Core context for the DineNDash database.
+/// EF Core context for the DineNDash database
 /// </summary>
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
@@ -36,7 +36,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     }
 
     /// <summary>
-    /// Sets UpdatedAt automatically whenever a model is changed.
+    /// Sets UpdatedAt automatically whenever a model is changed
     /// </summary>
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

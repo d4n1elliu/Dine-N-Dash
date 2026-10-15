@@ -8,10 +8,13 @@ using Microsoft.IdentityModel.Tokens;
 namespace DineNDash.Api.Extensions;
 
 /// <summary>
-/// Registers the auth services and configures JWT bearer validation.
- /// </summary>
+/// Registers the auth services and configures JWT bearer validation
+/// </summary>
 public static class AuthenticationExtensions
 {
+    /// <summary>
+    /// Wires up token, hashing and auth services and validates incoming bearer tokens
+    /// </summary>
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         var settings = configuration.GetSection("Jwt").Get<JwtSettings>() ?? new JwtSettings();

@@ -4,7 +4,7 @@ using DineNDash.Core.Models;
 namespace DineNDash.Tests.Fakes;
 
 /// <summary>
-/// In-memory IRepository used by tests instead of PostgreSQL.
+/// In-memory IRepository used by tests instead of PostgreSQL
 /// </summary>
 public class InMemoryRepository<T> : IRepository<T> where T : BaseEntity
 {

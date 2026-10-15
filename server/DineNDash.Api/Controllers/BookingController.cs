@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace DineNDash.Api.Controllers;
 
 /// <summary>
-/// Creates, lists, updates and cancels table bookings.
+/// Creates, lists, updates and cancels table bookings
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -20,6 +20,9 @@ public class BookingController : ControllerBase
         _bookingService = bookingService; 
     }
 
+    /// <summary>
+    /// Books a table for a diner if the slot has room
+    /// </summary>
     [HttpPost]
     public async Task<IActionResult> Create([FromQuery] int dinerId, CreateBookingRequest request)
     {
@@ -36,6 +39,9 @@ public class BookingController : ControllerBase
         return StatusCode(StatusCodes.Status201Created, ToResponse(created));
     }
 
+    /// <summary>
+    /// Lists a diner's bookings, earliest first
+    /// </summary>
     [HttpGet("diner/{dinerId}")]
     public async Task<IActionResult> GetForDiner(int dinerId) 
     {
@@ -43,6 +49,9 @@ public class BookingController : ControllerBase
         return Ok(bookings.Select(ToResponse)); 
     }
 
+    /// <summary>
+    /// Lists a restaurant's bookings, earliest first
+    /// </summary>
     [HttpGet("restaurant/{restaurantId}")]
     public async Task<IActionResult> GetForRestaurant(int restaurantId) 
     {
@@ -50,6 +59,9 @@ public class BookingController : ControllerBase
         return Ok(bookings.Select(ToResponse));
     }
 
+    /// <summary>
+    /// Reports whether a party fits at a restaurant at a given time
+    /// </summary>
     [HttpGet("availability")]
     public async Task<IActionResult> CheckAvailability(int restaurantId, DateTimeOffset time, int partySize)
     {
@@ -57,6 +69,9 @@ public class BookingController : ControllerBase
         return Ok(new { available }); 
     }
 
+    /// <summary>
+    /// Changes a booking status, for example when the restaurant confirms it
+    /// </summary>
     [HttpPut("{id}/status")]
     public async Task <IActionResult> UpdateStatus(int id, [FromQuery] BookingStatus status)
     {
@@ -64,6 +79,9 @@ public class BookingController : ControllerBase
         return Ok(ToResponse(updated)); 
     }
 
+    /// <summary>
+    /// Cancels a booking on behalf of the diner who made it
+    /// </summary>
     [HttpPost("{id}/cancel")]
     public async Task<IActionResult> Cancel(int id, [FromQuery] int dinerId) 
     {

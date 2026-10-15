@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace DineNDash.Api.Controllers;
 
 /// <summary>
-/// Creates, edits, deletes and lists restaurant reviews.
+/// Creates, edits, deletes and lists restaurant reviews
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -19,6 +19,9 @@ public class ReviewController : ControllerBase
         _reviewService = reviewService; 
     }
 
+    /// <summary>
+    /// Adds a review from a diner for a restaurant
+    /// </summary>
     [HttpPost]
     public async Task<IActionResult> Create([FromQuery] int dinerId, CreateReviewRequest request)
     {
@@ -34,6 +37,9 @@ public class ReviewController : ControllerBase
         return StatusCode(StatusCodes.Status201Created, ToResponse(created));
     }
 
+    /// <summary>
+    /// Edits the rating and comment of a review the diner wrote
+    /// </summary>
     [HttpPut("{id}")]
     public async Task <IActionResult> Update(int id, [FromQuery] int dinerId, UpdateReviewRequest request)
     {
@@ -48,6 +54,9 @@ public class ReviewController : ControllerBase
         return Ok(ToResponse(updated));
     }
 
+    /// <summary>
+    /// Deletes a review the diner wrote
+    /// </summary>
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id, [FromQuery] int dinerId) 
     {
@@ -55,6 +64,9 @@ public class ReviewController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Lists a diner's reviews, newest first
+    /// </summary>
     [HttpGet("diner/{dinerId}")]
     public async Task<IActionResult> GetForDiner(int dinerId) 
     {
@@ -62,6 +74,9 @@ public class ReviewController : ControllerBase
         return Ok(reviews.Select(ToResponse));
     }
 
+    /// <summary>
+    /// Lists a restaurant's reviews, newest first
+    /// </summary>
     [HttpGet("restaurant/{restaurantId}")]
     public async Task<IActionResult> GetForRestaurant(int restaurantId) 
     {
@@ -69,6 +84,9 @@ public class ReviewController : ControllerBase
         return Ok(reviews.Select(ToResponse));
     }
     
+    /// <summary>
+    /// Returns a restaurant's average rating, or 0 with no reviews
+    /// </summary>
     [HttpGet("restaurant/{restaurantId}/average")]
     public async Task<IActionResult> GetAverage(int restaurantId) 
     {

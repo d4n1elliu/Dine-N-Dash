@@ -8,12 +8,15 @@ using Microsoft.AspNetCore.Mvc;
 namespace DineNDash.Api.Controllers;
 
 /// <summary>
-/// Registers accounts, logs users in and reports who the current token belongs to.
+/// Registers accounts, logs users in and reports who the current token belongs to
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController(IAuthService authService, ITokenService tokenService) : ControllerBase
 {
+    /// <summary>
+    /// Creates an account and returns a token for it
+    /// </summary>
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
@@ -21,6 +24,9 @@ public class AuthController(IAuthService authService, ITokenService tokenService
         return StatusCode(StatusCodes.Status201Created, ToAuthResponse(user));
     }
 
+    /// <summary>
+    /// Checks credentials and returns a token
+    /// </summary>
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest request)
     {
@@ -28,6 +34,9 @@ public class AuthController(IAuthService authService, ITokenService tokenService
         return Ok(ToAuthResponse(user));
     }
 
+    /// <summary>
+    /// Returns the user behind the current token
+    /// </summary>
     [Authorize]
     [HttpGet("me")]
     public IActionResult Me()

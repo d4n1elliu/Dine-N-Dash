@@ -4,7 +4,7 @@ using DineNDash.Core.Enums;
 namespace DineNDash.Api.DTOs;
 
 /// <summary>
-/// Details needed to create a new account.
+/// Details needed to create a new account
 /// </summary>
 public class RegisterRequest
 {
@@ -15,12 +15,18 @@ public class RegisterRequest
     public UserRole Role { get; set; } = UserRole.Diner;
 }
 
+/// <summary>
+/// Credentials sent to log in
+/// </summary>
 public class LoginRequest
 {
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Public view of a user, without the password hash
+/// </summary>
 public class UserResponse
 {
     public int Id { get; set; }
@@ -28,6 +34,10 @@ public class UserResponse
     public string Email { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
 }
+
+/// <summary>
+/// Token plus the user it belongs to, returned by register and login
+/// </summary>
 public class AuthResponse
 {
     public string Token { get; set; } = string.Empty;
