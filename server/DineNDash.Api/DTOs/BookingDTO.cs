@@ -1,6 +1,10 @@
 using DineNDash.Core.Enums;
 
 namespace DineNDash.Api.DTOs; 
+
+/// <summary>
+/// Details needed to book a table
+/// </summary>
 public class CreateBookingRequest 
 {
     public int RestaurantId { get; set; }
@@ -8,6 +12,10 @@ public class CreateBookingRequest
     public int PartySize { get; set; }
     public string? SpecialRequests { get; set; }
 }
+
+/// <summary>
+/// Booking as shown to the client, with the restaurant name resolved
+/// </summary>
 public class BookingResponse 
 {
     public int Id { get; set; }

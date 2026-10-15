@@ -6,6 +6,9 @@ using DineNDash.Tests.Fakes;
 
 namespace DineNDash.Tests.Services;
 
+/// <summary>
+/// Covers registration and login rules in AuthService
+/// </summary>
 public class AuthServiceTests
 {
     private AuthService _authService = null!;

@@ -6,13 +6,16 @@ using Microsoft.AspNetCore.WebUtilities;
 namespace DineNDash.Api.Middleware;
 
 /// <summary>
-/// Catches every unhandled error and turns it into a consistent error response.
+/// Catches every unhandled error and turns it into a consistent error response
 /// </summary>
 public class GlobalExceptionHandler(
     ILogger<GlobalExceptionHandler> logger,
     IProblemDetailsService problemDetailsService,
     IHostEnvironment environment) : IExceptionHandler
 {
+    /// <summary>
+    /// Maps the exception to a ProblemDetails response, hiding internal messages outside development
+    /// </summary>
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
         Exception exception,
