@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
   login as loginRequest,
   register as registerRequest,
@@ -10,27 +10,33 @@ import { clearSession, readSession, writeSession } from './session-storage'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState(readSession)
+  // Each login, register or logout bumps this so a slow response from an earlier
+  // attempt cannot overwrite a session the user has since replaced
+  const attemptRef = useRef(0)
 
-  const startSession = useCallback((result: AuthResponse) => {
+  const runAttempt = useCallback(async (request: () => Promise<AuthResponse>) => {
+    const attempt = ++attemptRef.current
+    const result = await request()
+    if (attempt !== attemptRef.current) {
+      throw new Error('This sign in attempt was superseded by a newer one.')
+    }
     writeSession(result.token, result.user)
     setSession({ token: result.token, user: result.user })
   }, [])
 
   const login = useCallback(
-    async (email: string, password: string) => {
-      startSession(await loginRequest(email, password))
-    },
-    [startSession],
+    (email: string, password: string) => runAttempt(() => loginRequest(email, password)),
+    [runAttempt],
   )
 
   const register = useCallback(
-    async (name: string, email: string, password: string, role: UserRole) => {
-      startSession(await registerRequest(name, email, password, role))
-    },
-    [startSession],
+    (name: string, email: string, password: string, role: UserRole) =>
+      runAttempt(() => registerRequest(name, email, password, role)),
+    [runAttempt],
   )
 
   const logout = useCallback(() => {
+    attemptRef.current++
     clearSession()
     setSession({ token: null, user: null })
   }, [])
