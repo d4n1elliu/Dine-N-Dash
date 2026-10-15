@@ -6,7 +6,7 @@ using DineNDash.Core.Models;
 
 namespace DineNDash.Core.Services;
 /// <summary>
-/// Booking rules: validation, capacity checks and cancellation.
+/// Booking rules: validation, capacity checks and cancellation
 /// </summary>
 public class BookingService : IBookingService 
 {
@@ -19,6 +19,9 @@ public class BookingService : IBookingService
         _restaurants = restaurants;
     }
 
+    /// <summary>
+    /// Validates the booking, rejects it when the slot is full and stores it as Pending
+    /// </summary>
     public async Task<Booking> CreateAsync(Booking booking) 
     { 
         booking.Validate();
@@ -32,6 +35,9 @@ public class BookingService : IBookingService
         return await _bookings.AddAsync(booking); 
     }
 
+    /// <summary>
+    /// Returns a diner's bookings ordered by time
+    /// </summary>
     public async Task<IEnumerable<Booking>> GetForDinerAsync(int dinerId) 
     { 
         var allBookings = await _bookings.GetAllAsync();
@@ -40,6 +46,9 @@ public class BookingService : IBookingService
                           .ToList(); 
     }
 
+    /// <summary>
+    /// Returns a restaurant's bookings ordered by time
+    /// </summary>
     public async Task<IEnumerable<Booking>> GetForRestaurantAsync(int restaurantId) 
     { 
         var allBookings = await _bookings.GetAllAsync();
@@ -48,6 +57,9 @@ public class BookingService : IBookingService
                           .ToList(); 
     }
 
+    /// <summary>
+    /// Sets a new status on an existing booking, used by the restaurant side
+    /// </summary>
     public async Task<Booking> UpdateStatusAsync(int bookingId, BookingStatus status) 
     { 
         var booking = await _bookings.GetByIdAsync(bookingId) ?? throw new NotFoundException("Unable to find booking."); 
@@ -58,6 +70,9 @@ public class BookingService : IBookingService
 
     }
 
+    /// <summary>
+    /// Checks whether the party fits in the capacity left after pending and confirmed bookings at that exact time
+    /// </summary>
     public async Task<bool> IsSlotAvailableAsync(int restaurantId, DateTime time, int partySize) 
     {
         var restaurant = await _restaurants.GetByIdAsync(restaurantId) ?? throw new NotFoundException("Unable to find restaurant.");
@@ -70,6 +85,9 @@ public class BookingService : IBookingService
         return spotsTaken + partySize <= restaurant.Capacity; 
      }
 
+    /// <summary>
+    /// Cancels a booking only for the diner who made it and only while it is still upcoming
+    /// </summary>
     public async Task CancelAsync(int bookingId, int dinerId) 
     { 
         var booking = await _bookings.GetByIdAsync(bookingId) ?? throw new NotFoundException("Unable to find booking."); 

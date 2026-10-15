@@ -1,4 +1,8 @@
 namespace DineNDash.Core.Models;
+
+/// <summary>
+/// A diner's one-off rating and comment for a restaurant
+/// </summary>
 public class Review : BaseEntity
 {
     public int Rating { get; set; }

@@ -1,6 +1,10 @@
 using DineNDash.Core.Enums;
 
 namespace DineNDash.Core.Models;
+
+/// <summary>
+/// Account fields shared by diners and restaurant owners, stored in one table by EF discriminator
+/// </summary>
 public abstract class User : BaseEntity
 {
     public string Email { get; set; } = string.Empty;

@@ -6,12 +6,15 @@ using DineNDash.Core.Models;
 namespace DineNDash.Core.Services;
 
 /// <summary>
-/// Registers accounts and verifies login details using hashed passwords.
+/// Registers accounts and verifies login details using hashed passwords
 /// </summary>
 public class AuthService(IRepository<User> users, IPasswordHasher passwordHasher) : IAuthService
 {
     private const int MinPasswordLength = 8;
 
+    /// <summary>
+    /// Rejects short passwords and duplicate emails, then creates the account type for the role with a hashed password
+    /// </summary>
     public async Task<User> RegisterAsync(string email, string password, string name, UserRole role)
     {
         email = NormaliseEmail(email);
@@ -36,6 +39,9 @@ public class AuthService(IRepository<User> users, IPasswordHasher passwordHasher
         return await users.AddAsync(user);
     }
 
+    /// <summary>
+    /// Returns the user when the email and password match, otherwise throws Unauthorized without saying which was wrong
+    /// </summary>
     public async Task<User> LoginAsync(string email, string password)
     {
         var user = await FindByEmailAsync(NormaliseEmail(email));

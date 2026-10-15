@@ -3,12 +3,18 @@ using DineNDash.Core.Interfaces;
 namespace DineNDash.Core.Services;
 
 /// <summary>
-/// Password hasher backed by BCrypt.
+/// Password hasher backed by BCrypt
 /// </summary>
 public class BCryptPasswordHasher : IPasswordHasher
 {
+    /// <summary>
+    /// Returns a salted BCrypt hash to store instead of the password
+    /// </summary>
     public string Hash(string password) => BCrypt.Net.BCrypt.HashPassword(password);
 
+    /// <summary>
+    /// Returns true when the password matches, or false for a mismatch or a SaltParseException
+    /// </summary>
     public bool Verify(string password, string passwordHash)
     {
         try
