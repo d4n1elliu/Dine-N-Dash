@@ -4,6 +4,9 @@ using DineNDash.Core.Models;
 namespace DineNDash.Core.Interfaces;
 public interface IBookingService
 {
+    /// <summary>
+    /// Throws ConflictException when the slot cannot fit the party
+    /// </summary>
     Task<Booking> CreateAsync(Booking booking);
     Task<IEnumerable<Booking>> GetForDinerAsync(int dinerId);
     Task<IEnumerable<Booking>> GetForRestaurantAsync(int restaurantId);
