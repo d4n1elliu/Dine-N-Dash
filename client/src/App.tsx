@@ -5,6 +5,7 @@ import DashboardPage from './pages/DashboardPage'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import NotFoundPage from './pages/NotFoundPage'
+import RegisterPage from './pages/RegisterPage'
 import { ROUTES } from './routes'
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
       <Route element={<Layout />}>
         <Route path={ROUTES.home} element={<HomePage />} />
         <Route path={ROUTES.login} element={<LoginPage />} />
+        <Route path={ROUTES.register} element={<RegisterPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path={ROUTES.dashboard} element={<DashboardPage />} />

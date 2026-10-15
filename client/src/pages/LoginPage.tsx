@@ -1,8 +1,12 @@
-import { useState, type FormEvent } from 'react'
+import type { FormEvent } from 'react'
+import { useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { getErrorMessage } from '../api/client'
+import Button from '../components/Button'
+import FormError from '../components/FormError'
 import FormField from '../components/FormField'
+import TextLink from '../components/TextLink'
 import { useAuth } from '../context/useAuth'
+import { useSubmit } from '../hooks/useSubmit'
 import { ROUTES, type RedirectState } from '../routes'
 
 export default function LoginPage() {
@@ -11,8 +15,7 @@ export default function LoginPage() {
   const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const { submitting, error, setError, run } = useSubmit('Login failed. Please try again.')
 
   const redirectTo = (location.state as RedirectState | null)?.from ?? ROUTES.dashboard
 
@@ -20,12 +23,11 @@ export default function LoginPage() {
     return <Navigate to={redirectTo} replace />
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setError(null)
 
-    if (!email.includes('@')) {
-      setError('Enter a valid email address.')
+    if (email.trim().length === 0) {
+      setError('Enter your email address.')
       return
     }
     if (password.length === 0) {
@@ -33,15 +35,10 @@ export default function LoginPage() {
       return
     }
 
-    setSubmitting(true)
-    try {
+    void run(async () => {
       await login(email, password)
       navigate(redirectTo, { replace: true })
-    } catch (err) {
-      setError(getErrorMessage(err, 'Login failed. Please try again.'))
-    } finally {
-      setSubmitting(false)
-    }
+    })
   }
 
   return (
@@ -64,19 +61,14 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        {error && (
-          <p role="alert" className="text-sm text-red-700">
-            {error}
-          </p>
-        )}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full rounded bg-orange-600 px-4 py-2 font-medium text-white hover:bg-orange-700 disabled:opacity-60"
-        >
+        <FormError message={error} />
+        <Button type="submit" fullWidth disabled={submitting}>
           {submitting ? 'Logging in...' : 'Log in'}
-        </button>
+        </Button>
       </form>
+      <p className="mt-4 text-center text-sm text-gray-600">
+        Don&apos;t have an account? <TextLink to={ROUTES.register}>Sign up</TextLink>
+      </p>
     </section>
   )
 }
