@@ -1,4 +1,4 @@
-import type { FormEvent } from 'react'
+import type { ChangeEvent, FormEvent } from 'react'
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import type { UserRole } from '../api/auth'
@@ -24,6 +24,13 @@ export default function RegisterPage() {
   const [role, setRole] = useState<UserRole>('Diner')
   const { submitting, error, setError, run } = useSubmit('Registration failed. Please try again.')
 
+  // Clears the error on edit so it never describes a value the user has since changed
+  const onFieldChange =
+    (setValue: (value: string) => void) => (event: ChangeEvent<HTMLInputElement>) => {
+      setValue(event.target.value)
+      setError(null)
+    }
+
   if (isAuthenticated) {
     return <Navigate to={ROUTES.dashboard} replace />
   }
@@ -47,6 +54,7 @@ export default function RegisterPage() {
       return
     }
 
+    // register throws if a newer auth attempt superseded this one, which skips the navigate
     void run(async () => {
       await register(name.trim(), email, password, role)
       navigate(ROUTES.dashboard, { replace: true })
@@ -80,7 +88,7 @@ export default function RegisterPage() {
           autoComplete="name"
           placeholder="Jane Smith"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={onFieldChange(setName)}
         />
         <FormField
           id="email"
@@ -89,7 +97,7 @@ export default function RegisterPage() {
           autoComplete="email"
           placeholder="you@example.com"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={onFieldChange(setEmail)}
         />
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField
@@ -98,7 +106,7 @@ export default function RegisterPage() {
             type="password"
             autoComplete="new-password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={onFieldChange(setPassword)}
           />
           <FormField
             id="confirm-password"
@@ -106,7 +114,7 @@ export default function RegisterPage() {
             type="password"
             autoComplete="new-password"
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={onFieldChange(setConfirmPassword)}
           />
         </div>
         <p className="text-xs text-gray-500">Use at least {MIN_PASSWORD_LENGTH} characters.</p>
