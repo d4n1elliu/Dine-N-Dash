@@ -8,6 +8,9 @@ public static class ModelExtensions
         booking.BookingTime.ToLocalTime().ToString("ddd d MMM yyyy, h:mm tt");
     public static string ToPriceSymbols(this Restaurant restaurant) =>
         new string('$', restaurant.PriceLevel);
+    /// <summary>
+    /// Splits a CuisineType name into words, so MiddleEastern reads Middle Eastern
+    /// </summary>
     public static string ToDisplayName(this CuisineType cuisine) =>
         string.Concat(cuisine.ToString().Select(c => char.IsUpper(c) ? " " + c : c.ToString())).Trim();
     public static bool CanBeCancelled(this Booking booking) =>
