@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import TextLink from '../components/TextLink'
 import { ROUTES } from '../routes'
 
 export default function NotFoundPage() {
@@ -6,9 +6,9 @@ export default function NotFoundPage() {
     <section className="space-y-4 text-center">
       <h1 className="text-3xl font-bold">Page not found</h1>
       <p className="text-gray-600">That page does not exist.</p>
-      <Link to={ROUTES.home} className="text-orange-600 underline">
+      <TextLink to={ROUTES.home}>
         Back to home
-      </Link>
+      </TextLink>
     </section>
   )
 }

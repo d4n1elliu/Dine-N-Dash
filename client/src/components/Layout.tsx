@@ -2,6 +2,7 @@ import { startTransition } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { ROUTES } from '../routes'
+import { buttonClass } from '../lib/button-styles'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded px-3 py-2 text-sm font-medium transition ${
@@ -42,9 +43,17 @@ export default function Layout() {
                 Logout{user ? ` (${user.name})` : ''}
               </button>
             ) : (
-              <NavLink to={ROUTES.login} className={navLinkClass}>
-                Login
-              </NavLink>
+              <>
+                <NavLink to={ROUTES.login} className={navLinkClass}>
+                  Log in
+                </NavLink>
+                <Link
+                  to={ROUTES.register}
+                  className={`ml-1 ${buttonClass('pill')}`}
+                >
+                  Sign up
+                </Link>
+              </>
             )}
           </div>
         </nav>

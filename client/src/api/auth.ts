@@ -10,11 +10,20 @@ export interface AuthUser {
   role: UserRole
 }
 
-export interface LoginResponse {
+export interface AuthResponse {
   token: string
   user: AuthUser
 }
 
-export function login(email: string, password: string): Promise<LoginResponse> {
-  return api.post<LoginResponse>('/api/auth/login', { email, password })
+export function login(email: string, password: string): Promise<AuthResponse> {
+  return api.post<AuthResponse>('/api/auth/login', { email, password })
+}
+
+export function register(
+  name: string,
+  email: string,
+  password: string,
+  role: UserRole,
+): Promise<AuthResponse> {
+  return api.post<AuthResponse>('/api/auth/register', { name, email, password, role })
 }
