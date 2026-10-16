@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'server/**'
+              - 'DineNDash.sln'
+              - '.github/workflows/ci.yml'
+            frontend:
+              - 'client/**'
+              - '.github/workflows/ci.yml'
+
+  backend:
+    name: Backend
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore DineNDash.sln
+      - run: dotnet build DineNDash.sln --no-restore --configuration Release -warnaserror
+      - run: dotnet test DineNDash.sln --no-build --configuration Release
+
+  frontend:
+    name: Frontend
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  ci:
+    name: CI
+    needs: [changes, backend, frontend]
+    if: always()
+    runs-on: ubuntu-latest
+    env:
+      CHANGES_RESULT: ${{ needs.changes.result }}
+      BACKEND_WANTED: ${{ needs.changes.outputs.backend }}
+      FRONTEND_WANTED: ${{ needs.changes.outputs.frontend }}
+      BACKEND_RESULT: ${{ needs.backend.result }}
+      FRONTEND_RESULT: ${{ needs.frontend.result }}
+    steps:
+      - name: Check results
+        run: |
+          echo "changes: $CHANGES_RESULT"
+          echo "backend wanted: $BACKEND_WANTED, result: $BACKEND_RESULT"
+          echo "frontend wanted: $FRONTEND_WANTED, result: $FRONTEND_RESULT"
+
+          if [ "$CHANGES_RESULT" != "success" ]; then
+            echo "Change detection did not succeed"
+            exit 1
+          fi
+
+          if [ "$BACKEND_WANTED" = "true" ] && [ "$BACKEND_RESULT" != "success" ]; then
+            echo "Backend check did not succeed"
+            exit 1
+          fi
+
+          if [ "$FRONTEND_WANTED" = "true" ] && [ "$FRONTEND_RESULT" != "success" ]; then
+            echo "Frontend check did not succeed"
+            exit 1
+          fi
