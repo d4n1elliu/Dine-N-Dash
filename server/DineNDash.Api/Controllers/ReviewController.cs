@@ -2,6 +2,8 @@ using DineNDash.Api.DTOs;
 using DineNDash.Core.Interfaces;
 using DineNDash.Core.Models;
 using Microsoft.AspNetCore.Mvc;
+using DineNDash.Api.Extensions;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DineNDash.Api.Controllers;
 
@@ -22,12 +24,13 @@ public class ReviewController : ControllerBase
     /// <summary>
     /// Adds a review from a diner for a restaurant
     /// </summary>
+    [Authorize]
     [HttpPost]
-    public async Task<IActionResult> Create([FromQuery] int dinerId, CreateReviewRequest request)
+    public async Task<IActionResult> Create(CreateReviewRequest request)
     {
         var review = new Review
         {
-            DinerId = dinerId,
+            DinerId = User.GetUserId(),
             RestaurantId = request.RestaurantId,
             Rating = request.Rating,
             Comment = request.Comment
@@ -40,8 +43,9 @@ public class ReviewController : ControllerBase
     /// <summary>
     /// Edits the rating and comment of a review the diner wrote
     /// </summary>
+    [Authorize]
     [HttpPut("{id}")]
-    public async Task <IActionResult> Update(int id, [FromQuery] int dinerId, UpdateReviewRequest request)
+    public async Task <IActionResult> Update(int id, UpdateReviewRequest request)
     {
         var review = new Review 
         {
@@ -50,27 +54,29 @@ public class ReviewController : ControllerBase
             Comment = request.Comment
         };
 
-        var updated = await _reviewService.UpdateAsync(review, dinerId);
+        var updated = await _reviewService.UpdateAsync(review, User.GetUserId());
         return Ok(ToResponse(updated));
     }
 
     /// <summary>
     /// Deletes a review the diner wrote
     /// </summary>
+    [Authorize]
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id, [FromQuery] int dinerId) 
+    public async Task<IActionResult> Delete(int id) 
     {
-        await _reviewService.DeleteAsync(id, dinerId);
+        await _reviewService.DeleteAsync(id, User.GetUserId());
         return NoContent();
     }
 
     /// <summary>
     /// Lists a diner's reviews, newest first
     /// </summary>
-    [HttpGet("diner/{dinerId}")]
-    public async Task<IActionResult> GetForDiner(int dinerId) 
+    [Authorize]
+    [HttpGet("mine")]
+    public async Task<IActionResult> GetForDiner() 
     {
-        var reviews = await _reviewService.GetForDinerAsync(dinerId);
+        var reviews = await _reviewService.GetForDinerAsync(User.GetUserId());
         return Ok(reviews.Select(ToResponse));
     }
 
