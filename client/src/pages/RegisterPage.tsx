@@ -1,6 +1,6 @@
 import type { ChangeEvent, FormEvent } from 'react'
 import { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import type { UserRole } from '../api/auth'
 import Button from '../components/Button'
 import CheckList from '../components/CheckList'
@@ -12,11 +12,14 @@ import { useAuth } from '../context/useAuth'
 import { useSubmit } from '../hooks/useSubmit'
 import { ROLE_BENEFITS } from '../lib/roles'
 import { isValidEmail, MIN_PASSWORD_LENGTH } from '../lib/validation'
-import { ROUTES } from '../routes'
+import { homeFor, ROUTES, type RedirectState } from '../routes'
 
 export default function RegisterPage() {
-  const { register, isAuthenticated } = useAuth()
+  const { register, isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  // Set when the user arrived here from a page they should return to, such as a restaurant's Book button
+  const returnTo = (location.state as RedirectState | null)?.from
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -32,7 +35,7 @@ export default function RegisterPage() {
     }
 
   if (isAuthenticated) {
-    return <Navigate to={ROUTES.dashboard} replace />
+    return <Navigate to={returnTo ?? homeFor(user?.role)} replace />
   }
 
   function validate(): string | null {
@@ -56,8 +59,8 @@ export default function RegisterPage() {
 
     // register throws if a newer auth attempt superseded this one, which skips the navigate
     void run(async () => {
-      await register(name.trim(), email, password, role)
-      navigate(ROUTES.dashboard, { replace: true })
+      const signedIn = await register(name.trim(), email, password, role)
+      navigate(returnTo ?? homeFor(signedIn.role), { replace: true })
     })
   }
 
@@ -123,7 +126,9 @@ export default function RegisterPage() {
           {submitting ? 'Creating your account...' : 'Get started for free'}
         </Button>
         <p className="text-center text-sm text-gray-600">
-          Already have an account? <TextLink to={ROUTES.login}>Log in</TextLink>
+          Already have an account? <TextLink to={ROUTES.login} state={location.state}>
+            Log in
+          </TextLink>
         </p>
       </form>
     </section>

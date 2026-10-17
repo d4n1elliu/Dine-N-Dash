@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     writeSession(result.token, result.user)
     setSession({ token: result.token, user: result.user })
+    return result.user
   }, [])
 
   const login = useCallback(

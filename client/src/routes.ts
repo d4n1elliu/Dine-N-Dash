@@ -14,6 +14,11 @@ export function restaurantPath(id: number): string {
   return `/restaurants/${id}`
 }
 
+// Where a user lands after logging in or registering when no earlier page asked to return to
+export function homeFor(role: UserRole | undefined): string {
+  return role === 'RestaurantOwner' ? ROUTES.restaurantDashboard : ROUTES.home
+}
+
 export function dashboardFor(role: UserRole | undefined): string {
   return role === 'RestaurantOwner' ? ROUTES.restaurantDashboard : ROUTES.dashboard
 }

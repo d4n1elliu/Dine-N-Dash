@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { apiUrl } from '../api/client'
 import { getMenu, type MenuCategory, type MenuItem } from '../api/menu'
 import { cuisineLabel, getRestaurant } from '../api/restaurants'
@@ -8,7 +8,7 @@ import TextLink from '../components/TextLink'
 import { useAuth } from '../context/useAuth'
 import { useApi } from '../hooks/useApi'
 import { formatPrice } from '../lib/format'
-import { ROUTES } from '../routes'
+import { ROUTES, type RedirectState } from '../routes'
 
 // Loads the restaurant and its menu together; a missing restaurant resolves to null rather than an error
 async function loadRestaurant(id: number) {
@@ -86,14 +86,16 @@ export default function RestaurantPage() {
   )
 }
 
-// Guests are sent to sign up; for signed in users the button does nothing until the booking flow is built
+// Guests are sent to sign up and brought back here afterwards; for signed in users the button does nothing until the booking flow is built
 function BookButton() {
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   function handleClick() {
     if (!isAuthenticated) {
-      navigate(ROUTES.register)
+      const state: RedirectState = { from: location.pathname }
+      navigate(ROUTES.register, { state })
     }
   }
 

@@ -1,5 +1,5 @@
 import { startTransition } from 'react'
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { dashboardFor, ROUTES } from '../routes'
 import { buttonClass } from '../lib/button-styles'
@@ -12,8 +12,12 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 export default function Layout() {
   const { isAuthenticated, user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   // Restaurant owners have no home page, so their logo and nav lead to the dashboard
   const isOwner = user?.role === 'RestaurantOwner'
+  // Switching between log in and sign up keeps the page to return to, such as the restaurant whose Book button was clicked
+  const onAuthPage = location.pathname === ROUTES.login || location.pathname === ROUTES.register
+  const authLinkState = onAuthPage ? location.state : undefined
 
   function handleLogout() {
     startTransition(() => {
@@ -50,11 +54,12 @@ export default function Layout() {
               </button>
             ) : (
               <>
-                <NavLink to={ROUTES.login} className={navLinkClass}>
+                <NavLink to={ROUTES.login} state={authLinkState} className={navLinkClass}>
                   Log in
                 </NavLink>
                 <Link
                   to={ROUTES.register}
+                  state={authLinkState}
                   className={`ml-1 ${buttonClass('pill')}`}
                 >
                   Sign up
