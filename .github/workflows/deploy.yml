@@ -1,0 +1,169 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Never cancel a deploy halfway through: a half-finished
+# `docker compose up --build` can leave the stack broken.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    # CI is a separate workflow and runs in parallel; this job has no dependencies.
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+      SSH_HOST_FINGERPRINT: ${{ secrets.SSH_HOST_FINGERPRINT }}
+      DEPLOY_PATH: /var/www/dine-n-dash
+      HEALTH_URL: https://dine-n-dash.sunwookim.dev/api/health
+
+    steps:
+      - name: Check required secrets
+        run: |
+          set -euo pipefail
+          missing=""
+          for name in SSH_HOST SSH_USER SSH_PRIVATE_KEY SSH_HOST_FINGERPRINT; do
+            if [ -z "${!name}" ]; then
+              missing="$missing $name"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing"
+            exit 1
+          fi
+          echo "All required secrets are present."
+
+      - name: Install SSH key
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          # Written with a here-string so the key is never echoed or expanded.
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+      # Replaces trust-on-first-use: the scanned host key is only accepted when
+      # its SHA256 fingerprint matches the pinned SSH_HOST_FINGERPRINT secret, so
+      # a MITM answering the keyscan is rejected instead of silently trusted.
+      - name: Trust the host key
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          tmp_key=$(mktemp)
+          trap 'rm -f "$tmp_key"' EXIT
+
+          # Request only the ed25519 key so `ssh-keygen -lf` yields exactly one
+          # fingerprint to compare against.
+          scanned=0
+          for attempt in 1 2 3; do
+            if ssh-keyscan -T 15 -t ed25519 "$SSH_HOST" > "$tmp_key" 2>/dev/null \
+               && [ -s "$tmp_key" ]; then
+              scanned=1
+              break
+            fi
+            echo "ssh-keyscan attempt $attempt failed, retrying..."
+            sleep 5
+          done
+          if [ "$scanned" -ne 1 ]; then
+            echo "::error::Could not fetch the ed25519 host key for $SSH_HOST"
+            exit 1
+          fi
+
+          # `ssh-keygen -lf` prints "<bits> SHA256:<hash> <host> (<type>)".
+          received=$(ssh-keygen -lf "$tmp_key" -E sha256 | awk '{print $2}' | sed 's/[[:space:]]*$//')
+          expected=$(printf '%s' "$SSH_HOST_FINGERPRINT" | tr -d '[:space:]')
+          if [ -z "$received" ]; then
+            echo "::error::Could not read a fingerprint from the scanned host key"
+            exit 1
+          fi
+
+          # A mismatch fails on the first attempt: retrying would only ever help
+          # transient network errors, which the loop above already handles.
+          if [ "$received" != "$expected" ]; then
+            echo "::error::Host key fingerprint mismatch for $SSH_HOST: expected $expected, received $received"
+            exit 1
+          fi
+
+          cat "$tmp_key" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          echo "Host key verified against the pinned fingerprint ($expected) and recorded in ~/.ssh/known_hosts."
+
+      - name: Deploy over SSH
+        run: |
+          set -euo pipefail
+          # The script is fed to the remote `bash -s` through a quoted heredoc so
+          # nothing is expanded locally and no nested quoting is needed.
+          # `set -e` on the remote plus ssh's own exit status make a failed
+          # remote command fail this job.
+          ssh -o StrictHostKeyChecking=yes \
+              -o ConnectTimeout=15 \
+              -o ServerAliveInterval=30 \
+              -o ServerAliveCountMax=4 \
+              -i ~/.ssh/deploy_key \
+              "$SSH_USER@$SSH_HOST" 'bash -s' <<'REMOTE_SCRIPT'
+          set -euo pipefail
+
+          cd /var/www/dine-n-dash
+
+          # The clone is pull-only: nothing is ever edited in place.
+          # reset --hard only touches tracked files, so the untracked .env.prod
+          # (the production secrets) is preserved.
+          git fetch --prune origin
+          git reset --hard origin/main
+          echo "Deploying $(git rev-parse --short HEAD) ($(git log -1 --pretty=%s))"
+
+          if [ ! -f .env.prod ]; then
+            echo "::error::.env.prod is missing on the server; refusing to deploy." >&2
+            exit 1
+          fi
+
+          # --env-file is mandatory: without it the connection string
+          # interpolates to empty and the backend restart-loops.
+          docker compose -f docker-compose.prod.yml --env-file .env.prod up --build -d
+          docker compose -f docker-compose.prod.yml --env-file .env.prod ps
+          REMOTE_SCRIPT
+
+      - name: Health check
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 10); do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 10 "$HEALTH_URL" || echo 000)
+            case "$code" in
+              2??)
+                echo "$HEALTH_URL returned $code (attempt $attempt)."
+                exit 0
+                ;;
+              *)
+                echo "Attempt $attempt/10: $HEALTH_URL returned $code, retrying in 10s..."
+                sleep 10
+                ;;
+            esac
+          done
+          echo "::error::Health check failed: $HEALTH_URL never returned 2xx"
+          exit 1
+
+      - name: Summary
+        if: success()
+        run: |
+          set -euo pipefail
+          {
+            echo "### Deploy succeeded :white_check_mark:"
+            echo ""
+            echo "- Host: \`$SSH_HOST\`"
+            echo "- Path: \`$DEPLOY_PATH\`"
+            echo "- Containers: \`dinendash-backend\` (8080) and \`dinendash-web\` (80) rebuilt and running on the \`proxy\` network"
+            echo "- Migrations: applied automatically when the backend started"
+            echo "- Health: \`$HEALTH_URL\` returned 2xx"
+          } | tee -a "$GITHUB_STEP_SUMMARY"

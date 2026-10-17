@@ -7,11 +7,56 @@ Three files make up the production stack:
 | `server/DineNDash.Api/Dockerfile` | Multi-stage build of the .NET 10 API (build context `./server`) |
 | `client/Dockerfile` + `client/nginx.conf` | Builds the React SPA and serves it with nginx (build context `./client`) |
 | `docker-compose.prod.yml` | Wires both containers onto the external `proxy` network |
+| `.github/workflows/deploy.yml` | GitHub Actions pipeline that deploys every push to `main` |
 
 `docker-compose.yml` is still the local development stack (Postgres only) and is
 not used in production.
 
-## Deploy
+## Automated deployment (GitHub Actions)
+
+`.github/workflows/deploy.yml` deploys to the VPS on every push to `main` (and
+on demand), independently of `.github/workflows/ci.yml`.
+
+1. The runner writes `SSH_KEY` to a `chmod 600` file, then verifies the host key:
+   `ssh-keyscan -t ed25519` fetches it and its SHA256 fingerprint must equal
+   the pinned `SSH_HOST_FINGERPRINT` before it is added to `known_hosts` — no
+   trust-on-first-use, and SSH still runs with `StrictHostKeyChecking=yes`.
+2. Over SSH it runs, in `/var/www/dine-n-dash` (a pull-only clone):
+   `git fetch --prune origin`, then `git reset --hard origin/main`, then
+   `docker compose -f docker-compose.prod.yml --env-file .env.prod up --build -d`
+   and `... ps`.
+   `git reset --hard` only touches tracked files, so the untracked `.env.prod`
+   survives; the script refuses to deploy if `.env.prod` is missing.
+3. It then polls `https://dine-n-dash.sunwookim.dev/api/health` up to 10 times,
+   10 seconds apart, and fails the job unless a 2xx comes back.
+
+Required **repository secrets** (names only, set under
+*Settings → Secrets and variables → Actions*):
+
+| Secret | Purpose |
+|---|---|
+| `SSH_HOST` | VPS host name or IP |
+| `SSH_USER` | SSH user that owns `/var/www/dine-n-dash` and can run Docker |
+| `SSH_KEY` | Private key for that user (its public half in the server's `authorized_keys`) |
+| `SSH_HOST_FINGERPRINT` | Pinned `SHA256:...` fingerprint of the server's ed25519 host key, taken from a trusted source — on the VPS console run `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` (or `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key -E sha256`) and record the `SHA256:...` it prints. The deploy fails if the scanned key does not match, so a MITM cannot be trusted silently |
+
+Never copy `SSH_HOST_FINGERPRINT` from `ssh-keyscan`: that sources the pin from the
+same network path it protects, which is trust-on-first-use again. The workflow
+only uses `ssh-keyscan` to compare the live key with this trusted value.
+
+Run it manually from *Actions → Deploy → Run workflow*, or:
+
+```bash
+git push origin main                      # deploys automatically
+gh workflow run deploy.yml --ref main      # manual trigger
+gh run watch                               # follow the current run
+```
+
+Deploys are serialised by the `deploy-production` concurrency group and are
+never cancelled midway. Application secrets (`POSTGRES_*`, `JWT_KEY`) are **not**
+GitHub secrets — they live only in the server's untracked `.env.prod`.
+
+## Manual deploy (fallback)
 
 ```bash
 # once, if the shared network does not exist yet
@@ -65,23 +110,19 @@ to keep them across redeploys. Containers run as the image's non-root `app` user
 
 ## Database migrations
 
-`Program.cs` calls `db.Database.MigrateAsync()` on startup, but currently only
-when `ASPNETCORE_ENVIRONMENT` is `Development` (see `Program.cs`, the
-`if (app.Environment.IsDevelopment())` block around the migrate call). Because
-this stack sets `Production`, **migrations do not run automatically here**.
+`Program.cs` calls `db.Database.MigrateAsync()` before the app starts listening,
+in **every** environment, so the Production container applies any pending EF Core
+migrations by itself on startup. A deploy against an empty database therefore
+creates the schema, and a deploy with new migrations applies them — no manual
+step, no separate migration container.
 
-Bootstrap the schema once against a fresh database by starting the already-built
-image in Development mode, and stop it (`Ctrl-C`) as soon as you see
-`Now listening on: http://[::]:8080`:
+Migration failures abort startup (the container exits non-zero and the
+`unless-stopped` restart policy will retry), which the pipeline surfaces as a
+failed health check. Check the backend logs when that happens:
 
 ```bash
-docker compose -f docker-compose.prod.yml --env-file .env.prod \
-  run --rm -e ASPNETCORE_ENVIRONMENT=Development backend
+docker compose -f docker-compose.prod.yml --env-file .env.prod logs backend
 ```
-
-Recommended follow-up: move the `MigrateAsync()` call out of the
-`IsDevelopment()` guard in `Program.cs` so the Production container migrates
-itself on start.
 
 ## Useful commands
 
