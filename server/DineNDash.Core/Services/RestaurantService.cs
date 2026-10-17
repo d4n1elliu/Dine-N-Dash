@@ -9,6 +9,8 @@ namespace DineNDash.Core.Services;
 /// </summary>
 public class RestaurantService : IRestaurantService
 {
+    public const int MaxPageSize = 50;
+
     private IRepository<Restaurant> _restaurants;
     private IRepository<Review> _reviews;
 
@@ -19,55 +21,58 @@ public class RestaurantService : IRestaurantService
     }
 
     /// <summary>
-    /// Matches names and suburbs partially and ignoring case, then sorts by rating, price or name (the default)
+    /// Matches names and suburbs partially and ignoring case, sorts by rating, price or name (the default), then returns the requested page
     /// </summary>
-    public async Task<IEnumerable<Restaurant>> SearchAsync(string? name, CuisineType? cuisine, string? suburb, string? sortBy)
-    {
+    public async Task<PagedResult<Restaurant>> SearchAsync(string? name, CuisineType? cuisine, string? suburb, string? sortBy, int page, int pageSize) 
+    { 
+        ValidatePaging(page, pageSize);
+
         var allRestaurants = await _restaurants.GetAllAsync();
         var matches = allRestaurants.AsEnumerable();
 
-        if (!string.IsNullOrWhiteSpace(name))
+        if (!string.IsNullOrWhiteSpace(name)) 
         {
             matches = matches.Where(restaurant => restaurant.Name.Contains(name.Trim(), StringComparison.OrdinalIgnoreCase));
         }
 
-        if (cuisine != null)
+        if (cuisine != null) 
         {
             matches = matches.Where(restaurant => restaurant.Cuisine == cuisine);
         }
 
-        if (!string.IsNullOrWhiteSpace(suburb))
+        if (!string.IsNullOrWhiteSpace(suburb)) 
         {
             matches = matches.Where(restaurant => restaurant.Suburb.Contains(suburb.Trim(), StringComparison.OrdinalIgnoreCase));
         }
 
-        switch (sortBy?.Trim().ToLowerInvariant())
+        IEnumerable<Restaurant> sorted;
+        switch (sortBy?.Trim().ToLowerInvariant()) 
         {
             case null or "" or "name":
-                return matches.OrderBy(restaurant => restaurant.Name).ToList();
+                sorted = matches.OrderBy(restaurant => restaurant.Name);
+                break;
             case "price":
-                return matches.OrderBy(restaurant => restaurant.PriceLevel)
-                              .ThenBy(restaurant => restaurant.Name)
-                              .ToList();
+                sorted = matches.OrderBy(restaurant => restaurant.PriceLevel)
+                                .ThenBy(restaurant => restaurant.Name);
+                break;
             case "rating":
                 var averages = await GetAverageRatingsAsync();
-                return matches.OrderByDescending(restaurant => averages.GetValueOrDefault(restaurant.Id))
-                              .ThenBy(restaurant => restaurant.Name)
-                              .ToList();
+                sorted = matches.OrderByDescending(restaurant => averages.GetValueOrDefault(restaurant.Id))
+                                .ThenBy(restaurant => restaurant.Name);
+                break;
             default:
                 throw new BadRequestException("Sort must be name, price or rating.");
         }
+
+        return ToPage(sorted.ToList(), page, pageSize);
     }
 
     /// <summary>
     /// Ranks by average rating, then by number of reviews, then newest first for restaurants with no reviews
     /// </summary>
-    public async Task<IEnumerable<Restaurant>> GetRecommendedAsync(int count)
-    {
-        if (count <= 0)
-        {
-            throw new BadRequestException("Count must be greater than 0.");
-        }
+    public async Task<PagedResult<Restaurant>> GetRecommendedAsync(int page, int pageSize) 
+    { 
+        ValidatePaging(page, pageSize);
 
         var allRestaurants = await _restaurants.GetAllAsync();
         var allReviews = await _reviews.GetAllAsync();
@@ -75,11 +80,12 @@ public class RestaurantService : IRestaurantService
                                 .ToDictionary(group => group.Key,
                                               group => (Average: group.Average(review => review.Rating), Count: group.Count()));
 
-        return allRestaurants.OrderByDescending(restaurant => ratings.GetValueOrDefault(restaurant.Id).Average)
-                             .ThenByDescending(restaurant => ratings.GetValueOrDefault(restaurant.Id).Count)
-                             .ThenByDescending(restaurant => restaurant.CreatedAt)
-                             .Take(count)
-                             .ToList();
+        var ranked = allRestaurants.OrderByDescending(restaurant => ratings.GetValueOrDefault(restaurant.Id).Average)
+                                   .ThenByDescending(restaurant => ratings.GetValueOrDefault(restaurant.Id).Count)
+                                   .ThenByDescending(restaurant => restaurant.CreatedAt)
+                                   .ToList();
+
+        return ToPage(ranked, page, pageSize);
     }
 
     /// <summary>
@@ -120,6 +126,30 @@ public class RestaurantService : IRestaurantService
         await _restaurants.UpdateAsync(existing);
         return existing;
     }
+
+    private static void ValidatePaging(int page, int pageSize)
+    {
+        if (page < 1)
+        {
+            throw new BadRequestException("Page must be 1 or greater.");
+        }
+
+        if (pageSize is < 1 or > MaxPageSize)
+        {
+            throw new BadRequestException($"Page size must be between 1 and {MaxPageSize}.");
+        }
+    }
+
+    /// <summary>
+    /// Cuts one page out of an already sorted list; a page past the end comes back empty
+    /// </summary>
+    private static PagedResult<Restaurant> ToPage(List<Restaurant> sorted, int page, int pageSize) => new()
+    {
+        Items = sorted.Skip((page - 1) * pageSize).Take(pageSize).ToList(),
+        Page = page,
+        PageSize = pageSize,
+        TotalCount = sorted.Count
+    };
 
     private async Task<Dictionary<int, double>> GetAverageRatingsAsync()
     {

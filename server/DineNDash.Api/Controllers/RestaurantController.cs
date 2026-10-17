@@ -21,23 +21,23 @@ public class RestaurantController : ControllerBase
     }
 
     /// <summary>
-    /// Lists restaurants whose name partially matches, with optional cuisine, suburb and sort (name, price or rating)
+    /// Lists a page of restaurants whose name partially matches, with optional cuisine, suburb and sort (name, price or rating)
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> Search(string? name, CuisineType? cuisine, string? suburb, string? sortBy)
+    public async Task<IActionResult> Search(string? name, CuisineType? cuisine, string? suburb, string? sortBy, int page = 1, int pageSize = 10)
     {
-        var restaurants = await _restaurantService.SearchAsync(name, cuisine, suburb, sortBy);
-        return Ok(restaurants.Select(ToResponse));
+        var results = await _restaurantService.SearchAsync(name, cuisine, suburb, sortBy, page, pageSize);
+        return Ok(ToPagedResponse(results));
     }
 
     /// <summary>
-    /// Lists the top rated restaurants for the main page
+    /// Lists a page of the top rated restaurants for the main page
     /// </summary>
     [HttpGet("recommended")]
-    public async Task<IActionResult> GetRecommended(int count = 10)
+    public async Task<IActionResult> GetRecommended(int page = 1, int pageSize = 10)
     {
-        var restaurants = await _restaurantService.GetRecommendedAsync(count);
-        return Ok(restaurants.Select(ToResponse));
+        var results = await _restaurantService.GetRecommendedAsync(page, pageSize);
+        return Ok(ToPagedResponse(results));
     }
 
     /// <summary>
@@ -49,6 +49,15 @@ public class RestaurantController : ControllerBase
         var restaurant = await _restaurantService.GetByIdAsync(id);
         return Ok(ToResponse(restaurant));
     }
+
+    private static PagedResponse<RestaurantResponse> ToPagedResponse(PagedResult<Restaurant> results) => new()
+    {
+        Items = results.Items.Select(ToResponse),
+        Page = results.Page,
+        PageSize = results.PageSize,
+        TotalCount = results.TotalCount,
+        TotalPages = results.TotalPages
+    };
 
     private static RestaurantResponse ToResponse(Restaurant restaurant) => new()
     {

@@ -16,3 +16,15 @@ public class RestaurantResponse
     public int PriceLevel { get; set; }
     public ICollection<string> PhotoUrls { get; set; } = [];
 }
+
+/// <summary>
+/// One page of results with the totals needed for page controls
+/// </summary>
+public class PagedResponse<T>
+{
+    public IEnumerable<T> Items { get; set; } = [];
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+    public int TotalCount { get; set; }
+    public int TotalPages { get; set; }
+}

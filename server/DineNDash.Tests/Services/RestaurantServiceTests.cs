@@ -49,9 +49,9 @@ public class RestaurantServiceTests
         await AddRestaurant("Sushi Hub");
         await AddRestaurant("Pizza Place");
 
-        var results = await _restaurantService.SearchAsync("  sUsHi ", null, null, null);
+        var results = await _restaurantService.SearchAsync("  sUsHi ", null, null, null, 1, 10);
 
-        Assert.That(results.Select(r => r.Name), Is.EqualTo(new[] { "Sushi Hub", "Sushi Train" }));
+        Assert.That(results.Items.Select(r => r.Name), Is.EqualTo(new[] { "Sushi Hub", "Sushi Train" }));
     }
 
     [Test]
@@ -60,9 +60,9 @@ public class RestaurantServiceTests
         await AddRestaurant("Zeta");
         await AddRestaurant("Alpha");
 
-        var results = await _restaurantService.SearchAsync(null, null, null, null);
+        var results = await _restaurantService.SearchAsync(null, null, null, null, 1, 10);
 
-        Assert.That(results.Select(r => r.Name), Is.EqualTo(new[] { "Alpha", "Zeta" }));
+        Assert.That(results.Items.Select(r => r.Name), Is.EqualTo(new[] { "Alpha", "Zeta" }));
     }
 
     [Test]
@@ -70,9 +70,9 @@ public class RestaurantServiceTests
     {
         await AddRestaurant("Sushi Train");
 
-        var results = await _restaurantService.SearchAsync("burger", null, null, null);
+        var results = await _restaurantService.SearchAsync("burger", null, null, null, 1, 10);
 
-        Assert.That(results, Is.Empty);
+        Assert.That(results.Items, Is.Empty);
     }
 
     [Test]
@@ -82,9 +82,9 @@ public class RestaurantServiceTests
         await AddRestaurant("Thai Two", CuisineType.Thai, "Parramatta");
         await AddRestaurant("Pho Newtown", CuisineType.Vietnamese, "Newtown");
 
-        var results = await _restaurantService.SearchAsync(null, CuisineType.Thai, "newtown", null);
+        var results = await _restaurantService.SearchAsync(null, CuisineType.Thai, "newtown", null, 1, 10);
 
-        Assert.That(results.Select(r => r.Name), Is.EqualTo(new[] { "Thai One" }));
+        Assert.That(results.Items.Select(r => r.Name), Is.EqualTo(new[] { "Thai One" }));
     }
 
     [Test]
@@ -93,9 +93,9 @@ public class RestaurantServiceTests
         await AddRestaurant("Fancy", priceLevel: 4);
         await AddRestaurant("Cheap", priceLevel: 1);
 
-        var results = await _restaurantService.SearchAsync(null, null, null, "price");
+        var results = await _restaurantService.SearchAsync(null, null, null, "price", 1, 10);
 
-        Assert.That(results.Select(r => r.Name), Is.EqualTo(new[] { "Cheap", "Fancy" }));
+        Assert.That(results.Items.Select(r => r.Name), Is.EqualTo(new[] { "Cheap", "Fancy" }));
     }
 
     [Test]
@@ -107,16 +107,16 @@ public class RestaurantServiceTests
         await AddReview(low.Id, 1, 2);
         await AddReview(high.Id, 1, 5);
 
-        var results = await _restaurantService.SearchAsync(null, null, null, "rating");
+        var results = await _restaurantService.SearchAsync(null, null, null, "rating", 1, 10);
 
-        Assert.That(results.Select(r => r.Name), Is.EqualTo(new[] { "High", "Low", "Unrated" }));
+        Assert.That(results.Items.Select(r => r.Name), Is.EqualTo(new[] { "High", "Low", "Unrated" }));
     }
 
     [Test]
     public void Search_UnknownSort_ThrowsBadRequest()
     {
         Assert.ThrowsAsync<BadRequestException>(() =>
-            _restaurantService.SearchAsync(null, null, null, "distance"));
+            _restaurantService.SearchAsync(null, null, null, "distance", 1, 10));
     }
 
     [Test]
@@ -131,27 +131,76 @@ public class RestaurantServiceTests
         await AddReview(twoFives.Id, 2, 5);
         await AddReview(three.Id, 1, 3);
 
-        var results = await _restaurantService.GetRecommendedAsync(10);
+        var results = await _restaurantService.GetRecommendedAsync(1, 10);
 
-        Assert.That(results.Select(r => r.Name), Is.EqualTo(new[] { "Two Fives", "One Five", "Three", "Unrated" }));
+        Assert.That(results.Items.Select(r => r.Name), Is.EqualTo(new[] { "Two Fives", "One Five", "Three", "Unrated" }));
     }
 
     [Test]
-    public async Task GetRecommended_LimitsToCount()
+    public async Task GetRecommended_SecondPage_ReturnsNextItemsAndTotals()
     {
-        await AddRestaurant("A");
-        await AddRestaurant("B");
-        await AddRestaurant("C");
+        var first = await AddRestaurant("First");
+        var second = await AddRestaurant("Second");
+        await AddRestaurant("Third");
+        await AddReview(first.Id, 1, 5);
+        await AddReview(second.Id, 1, 4);
 
-        var results = await _restaurantService.GetRecommendedAsync(2);
+        var results = await _restaurantService.GetRecommendedAsync(2, 2);
 
-        Assert.That(results.Count(), Is.EqualTo(2));
+        Assert.Multiple(() =>
+        {
+            Assert.That(results.Items.Select(r => r.Name), Is.EqualTo(new[] { "Third" }));
+            Assert.That(results.TotalCount, Is.EqualTo(3));
+            Assert.That(results.TotalPages, Is.EqualTo(2));
+        });
+    }
+
+    [TestCase(0, 10)]
+    [TestCase(1, 0)]
+    [TestCase(1, RestaurantService.MaxPageSize + 1)]
+    public void GetRecommended_InvalidPaging_ThrowsBadRequest(int page, int pageSize)
+    {
+        Assert.ThrowsAsync<BadRequestException>(() => _restaurantService.GetRecommendedAsync(page, pageSize));
     }
 
     [Test]
-    public void GetRecommended_ZeroCount_ThrowsBadRequest()
+    public async Task Search_PagesAfterFilteringAndSorting()
     {
-        Assert.ThrowsAsync<BadRequestException>(() => _restaurantService.GetRecommendedAsync(0));
+        await AddRestaurant("Sushi C");
+        await AddRestaurant("Pizza");
+        await AddRestaurant("Sushi A");
+        await AddRestaurant("Sushi B");
+
+        var results = await _restaurantService.SearchAsync("sushi", null, null, null, 2, 2);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(results.Items.Select(r => r.Name), Is.EqualTo(new[] { "Sushi C" }));
+            Assert.That(results.Page, Is.EqualTo(2));
+            Assert.That(results.TotalCount, Is.EqualTo(3));
+            Assert.That(results.TotalPages, Is.EqualTo(2));
+        });
+    }
+
+    [Test]
+    public async Task Search_PagePastEnd_ReturnsEmptyItems()
+    {
+        await AddRestaurant("Only One");
+
+        var results = await _restaurantService.SearchAsync(null, null, null, null, 5, 10);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(results.Items, Is.Empty);
+            Assert.That(results.TotalCount, Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void Search_InvalidPaging_ThrowsBadRequest()
+    {
+        Assert.ThrowsAsync<BadRequestException>(() =>
+            _restaurantService.SearchAsync(null, null, null, null, 0, 10));
     }
 
     [Test]
