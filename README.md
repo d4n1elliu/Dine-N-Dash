@@ -52,6 +52,8 @@ Dine-N-Dash/
 ├── DineNDash.sln                        Solution file, open this in Visual Studio 2026
 ├── docker-compose.yml                   Runs PostgreSQL in Docker
 ├── README.md
+├── scripts/
+│   └── setup-backend-env.sh             Creates .env and stores backend settings in User Secrets
 ├── client/                              React frontend
 │   ├── public/
 │   │   ├── favicon.svg                  Browser tab icon
@@ -129,24 +131,27 @@ cd Dine-N-Dash
 
 ### 2. Start the database
 
-Copy `.env.example` to `.env` in the repo root and set a database password. Then start PostgreSQL in Docker.
+On Linux or macOS, run the setup script from the repo root. It creates `.env` with a random database password, generates a JWT signing key and stores the backend values in .NET User Secrets:
+
+```bash
+./scripts/setup-backend-env.sh
+```
+
+Then start PostgreSQL in Docker:
 
 ```bash
 docker compose up -d
 ```
 
-Store the connection string with .NET User Secrets so it never gets committed. Use the same password you set in `.env`.
+To configure everything by hand, copy `.env.example` to `.env`, set a unique `POSTGRES_PASSWORD`, and store the connection string and JWT signing key with .NET User Secrets. Use the same password you set in `.env`.
 
 ```bash
 cd server/DineNDash.Api
 dotnet user-secrets set "ConnectionStrings:Default" "Host=localhost;Port=5432;Database=dinendash;Username=postgres;Password=yourpassword"
-```
-
-Also store a signing key for login tokens. Use any random string of at least 32 characters.
-
-```bash
 dotnet user-secrets set "Jwt:Key" "replace-this-with-a-long-random-string-of-your-own"
 ```
+
+If `.env` already exists with `POSTGRES_PASSWORD=change-me`, the script stops instead of using the placeholder password.
 
 The initial migration is included in `DineNDash.Data/Migrations`. When the backend runs in development, it applies any pending migrations automatically and creates the database tables, so no manual migration commands are needed.
 
@@ -224,7 +229,7 @@ Secrets are never stored in the repository.
 
 | Where | What goes there |
 |---|---|
-| `.env` in the repo root | Database settings used by Docker and public frontend settings such as `VITE_API_URL` |
+| `.env` in the repo root | Database settings used by Docker, the generated local `JWT_KEY` and public frontend settings such as `VITE_API_URL` |
 | .NET User Secrets | Database connection string, JWT signing key and any private API keys |
 
 ## Deployment
