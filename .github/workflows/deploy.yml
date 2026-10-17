@@ -1,0 +1,138 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Never cancel a deploy halfway through: a half-finished
+# `docker compose up --build` can leave the stack broken.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    # CI lives in its own workflow and runs in parallel.
+    needs: []
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+      DEPLOY_PATH: /var/www/dine-n-dash
+      HEALTH_URL: https://dine-n-dash.sunwookim.dev/api/health
+
+    steps:
+      - name: Check required secrets
+        run: |
+          set -euo pipefail
+          missing=""
+          for name in SSH_HOST SSH_USER SSH_PRIVATE_KEY; do
+            if [ -z "${!name}" ]; then
+              missing="$missing $name"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing"
+            exit 1
+          fi
+          echo "All required secrets are present."
+
+      - name: Install SSH key
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          # Written with a here-string so the key is never echoed or expanded.
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+      - name: Trust the host key
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          for attempt in 1 2 3; do
+            if ssh-keyscan -T 15 -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null \
+               && [ -s ~/.ssh/known_hosts ]; then
+              echo "Host key recorded in ~/.ssh/known_hosts."
+              exit 0
+            fi
+            echo "ssh-keyscan attempt $attempt failed, retrying..."
+            sleep 5
+          done
+          echo "::error::Could not fetch the host key for $SSH_HOST"
+          exit 1
+
+      - name: Deploy over SSH
+        run: |
+          set -euo pipefail
+          # The script is fed to the remote `bash -s` through a quoted heredoc so
+          # nothing is expanded locally and no nested quoting is needed.
+          # `set -e` on the remote plus ssh's own exit status make a failed
+          # remote command fail this job.
+          ssh -o StrictHostKeyChecking=yes \
+              -o ConnectTimeout=15 \
+              -o ServerAliveInterval=30 \
+              -o ServerAliveCountMax=4 \
+              -i ~/.ssh/deploy_key \
+              "$SSH_USER@$SSH_HOST" 'bash -s' <<'REMOTE_SCRIPT'
+          set -euo pipefail
+
+          cd /var/www/dine-n-dash
+
+          # The clone is pull-only: nothing is ever edited in place.
+          # reset --hard only touches tracked files, so the untracked .env.prod
+          # (the production secrets) is preserved.
+          git fetch --prune origin
+          git reset --hard origin/main
+          echo "Deploying $(git rev-parse --short HEAD) ($(git log -1 --pretty=%s))"
+
+          if [ ! -f .env.prod ]; then
+            echo "::error::.env.prod is missing on the server; refusing to deploy." >&2
+            exit 1
+          fi
+
+          # --env-file is mandatory: without it the connection string
+          # interpolates to empty and the backend restart-loops.
+          docker compose -f docker-compose.prod.yml --env-file .env.prod up --build -d
+          docker compose -f docker-compose.prod.yml --env-file .env.prod ps
+          REMOTE_SCRIPT
+
+      - name: Health check
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 10); do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 10 "$HEALTH_URL" || echo 000)
+            case "$code" in
+              2??)
+                echo "$HEALTH_URL returned $code (attempt $attempt)."
+                exit 0
+                ;;
+              *)
+                echo "Attempt $attempt/10: $HEALTH_URL returned $code, retrying in 10s..."
+                sleep 10
+                ;;
+            esac
+          done
+          echo "::error::Health check failed: $HEALTH_URL never returned 2xx"
+          exit 1
+
+      - name: Summary
+        if: success()
+        run: |
+          set -euo pipefail
+          {
+            echo "### Deploy succeeded :white_check_mark:"
+            echo ""
+            echo "- Host: \`$SSH_HOST\`"
+            echo "- Path: \`$DEPLOY_PATH\`"
+            echo "- Containers: \`dinendash-backend\` (8080) and \`dinendash-web\` (80) rebuilt and running on the \`proxy\` network"
+            echo "- Migrations: applied automatically when the backend started"
+            echo "- Health: \`$HEALTH_URL\` returned 2xx"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
