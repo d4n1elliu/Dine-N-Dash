@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import NotFoundPage from './pages/NotFoundPage'
 import RegisterPage from './pages/RegisterPage'
+import SearchPage from './pages/SearchPage'
 import { ROUTES } from './routes'
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route path={ROUTES.home} element={<HomePage />} />
+        <Route path={ROUTES.search} element={<SearchPage />} />
         <Route path={ROUTES.login} element={<LoginPage />} />
         <Route path={ROUTES.register} element={<RegisterPage />} />
 

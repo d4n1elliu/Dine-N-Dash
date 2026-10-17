@@ -23,6 +23,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<IRestaurantService, RestaurantService>();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
 builder.Services.AddCors(options =>
