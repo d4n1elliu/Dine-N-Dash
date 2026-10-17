@@ -1,7 +1,7 @@
 import { startTransition } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
-import { ROUTES } from '../routes'
+import { dashboardFor, ROUTES } from '../routes'
 import { buttonClass } from '../lib/button-styles'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -31,7 +31,7 @@ export default function Layout() {
             <NavLink to={ROUTES.home} end className={navLinkClass}>
               Home
             </NavLink>
-            <NavLink to={ROUTES.dashboard} className={navLinkClass}>
+            <NavLink to={dashboardFor(user?.role)} className={navLinkClass}>
               Dashboard
             </NavLink>
             {isAuthenticated ? (

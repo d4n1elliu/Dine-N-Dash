@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import NotFoundPage from './pages/NotFoundPage'
 import RegisterPage from './pages/RegisterPage'
+import RestaurantDashboardPage from './pages/RestaurantDashboardPage'
 import SearchPage from './pages/SearchPage'
 import { ROUTES } from './routes'
 
@@ -18,8 +19,12 @@ function App() {
         <Route path={ROUTES.login} element={<LoginPage />} />
         <Route path={ROUTES.register} element={<RegisterPage />} />
 
-        <Route element={<ProtectedRoute />}>
+        <Route element={<ProtectedRoute role="Diner" />}>
           <Route path={ROUTES.dashboard} element={<DashboardPage />} />
+        </Route>
+
+        <Route element={<ProtectedRoute role="RestaurantOwner" />}>
+          <Route path={ROUTES.restaurantDashboard} element={<RestaurantDashboardPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />
