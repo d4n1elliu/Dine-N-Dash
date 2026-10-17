@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { getErrorMessage } from '../api/client'
 
 export interface ApiState<T> {
@@ -7,9 +7,16 @@ export interface ApiState<T> {
   loading: boolean
 }
 
+export interface ApiResult<T> extends ApiState<T> {
+  // Fetches again, keeping the current data on screen until the new response arrives
+  reload: () => void
+}
+
 // Use a stable fetcher to avoid refetching on every render
-export function useApi<T>(fetcher: () => Promise<T>): ApiState<T> {
+export function useApi<T>(fetcher: () => Promise<T>): ApiResult<T> {
   const [state, setState] = useState<ApiState<T>>({ data: null, error: null, loading: true })
+  const [version, setVersion] = useState(0)
+  const reload = useCallback(() => setVersion((current) => current + 1), [])
 
   useEffect(() => {
     let cancelled = false
@@ -25,7 +32,7 @@ export function useApi<T>(fetcher: () => Promise<T>): ApiState<T> {
     return () => {
       cancelled = true
     }
-  }, [fetcher])
+  }, [fetcher, version])
 
-  return state
+  return { ...state, reload }
 }

@@ -14,13 +14,14 @@ public class CreateBookingRequest
 }
 
 /// <summary>
-/// Booking as shown to the client, with the restaurant name resolved
+/// Booking as shown to the client, with the restaurant and diner names resolved where loaded
 /// </summary>
 public class BookingResponse 
 {
     public int Id { get; set; }
     public int RestaurantId { get; set; }
     public string? RestaurantName { get; set; }
+    public string? DinerName { get; set; }
     public DateTime BookingTime { get; set; }
     public int PartySize { get; set; }
     public BookingStatus Status { get; set; } 

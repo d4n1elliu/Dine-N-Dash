@@ -11,7 +11,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<DinerAccount> Diners => Set<DinerAccount>();
     public DbSet<RestaurantAccount> RestaurantOwners => Set<RestaurantAccount>();
     public DbSet<Restaurant> Restaurants => Set<Restaurant>();
+    public DbSet<MenuCategory> MenuCategories => Set<MenuCategory>();
     public DbSet<MenuItem> MenuItems => Set<MenuItem>();
+    public DbSet<Image> Images => Set<Image>();
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<Review> Reviews => Set<Review>();
 
@@ -30,7 +32,34 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .WithOne(o => o.Restaurant)
             .HasForeignKey<Restaurant>(r => r.OwnerId);
 
+        modelBuilder.Entity<MenuCategory>()
+            .HasOne(c => c.Restaurant)
+            .WithMany(r => r.MenuCategories)
+            .HasForeignKey(c => c.RestaurantId);
+
+        modelBuilder.Entity<MenuCategory>().HasIndex(c => new { c.RestaurantId, c.Name }).IsUnique();
+
+        modelBuilder.Entity<MenuItem>()
+            .HasOne(m => m.MenuCategory)
+            .WithMany(c => c.MenuItems)
+            .HasForeignKey(m => m.MenuCategoryId);
+
         modelBuilder.Entity<MenuItem>().Property(m => m.Price).HasPrecision(10, 2);
+
+        // Deleting an image clears the link instead of deleting the restaurant or menu item
+        modelBuilder.Entity<Restaurant>()
+            .HasOne(r => r.ProfileImage)
+            .WithMany()
+            .HasForeignKey(r => r.ProfileImageId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<MenuItem>()
+            .HasOne(m => m.Image)
+            .WithMany()
+            .HasForeignKey(m => m.ImageId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Image>().HasIndex(i => i.FileName).IsUnique();
 
         modelBuilder.Entity<Review>().HasIndex(r => new { r.DinerId, r.RestaurantId }).IsUnique();
     }

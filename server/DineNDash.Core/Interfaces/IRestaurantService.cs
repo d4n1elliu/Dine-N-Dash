@@ -20,6 +20,21 @@ public interface IRestaurantService
     /// Throws NotFoundException rather than returning null, unlike the repository
     /// </summary>
     Task<Restaurant> GetByIdAsync(int id);
+    /// <summary>
+    /// Throws NotFoundException when the owner has not created their restaurant yet
+    /// </summary>
+    Task<Restaurant> GetForOwnerAsync(int ownerId);
+    /// <summary>
+    /// Throws ConflictException when the owner already has a restaurant, since each owner has one
+    /// </summary>
     Task<Restaurant> CreateAsync(Restaurant restaurant);
-    Task<Restaurant> UpdateAsync(Restaurant restaurant);
+    /// <summary>
+    /// Copies the editable details onto the owner's restaurant
+    /// </summary>
+    Task<Restaurant> UpdateAsync(int ownerId, Restaurant changes);
+    /// <summary>
+    /// Uploads a new profile image and deletes the one it replaces
+    /// </summary>
+    Task<Restaurant> SetProfileImageAsync(int ownerId, Stream content, string fileName);
+    Task<Restaurant> RemoveProfileImageAsync(int ownerId);
 }

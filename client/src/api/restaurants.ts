@@ -1,4 +1,4 @@
-import { api } from './client'
+import { api, ApiError } from './client'
 
 // Must match the order of the CuisineType enum in the backend, which is sent as a number
 export const CUISINES = [
@@ -27,7 +27,22 @@ export interface Restaurant {
   address: string
   suburb: string
   priceLevel: number
-  photoUrls: string[]
+  profileImageUrl: string | null
+}
+
+// The owner's view of their own restaurant
+export interface RestaurantProfile extends Restaurant {
+  capacity: number
+}
+
+export interface RestaurantProfileInput {
+  name: string
+  description: string
+  cuisine: number
+  address: string
+  suburb: string
+  priceLevel: number
+  capacity: number
 }
 
 export interface PagedResponse<T> {
@@ -53,6 +68,32 @@ export function getRecommendedRestaurants(page = 1, pageSize = 9): Promise<Paged
 
 export function searchRestaurants(search: RestaurantSearch): Promise<PagedResponse<Restaurant>> {
   return api.get<PagedResponse<Restaurant>>(`/api/restaurant?${toQuery({ ...search })}`)
+}
+
+// Resolves to null when the owner has not created their restaurant yet
+export async function getMyRestaurant(): Promise<RestaurantProfile | null> {
+  try {
+    return await api.get<RestaurantProfile>('/api/restaurant/mine')
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null
+    throw error
+  }
+}
+
+export function createMyRestaurant(input: RestaurantProfileInput): Promise<RestaurantProfile> {
+  return api.post<RestaurantProfile>('/api/restaurant/mine', input)
+}
+
+export function updateMyRestaurant(input: RestaurantProfileInput): Promise<RestaurantProfile> {
+  return api.put<RestaurantProfile>('/api/restaurant/mine', input)
+}
+
+export function uploadRestaurantImage(file: File): Promise<RestaurantProfile> {
+  return api.upload<RestaurantProfile>('/api/restaurant/mine/image', file)
+}
+
+export function removeRestaurantImage(): Promise<RestaurantProfile> {
+  return api.delete<RestaurantProfile>('/api/restaurant/mine/image')
 }
 
 // Splits MiddleEastern into Middle Eastern, like ToDisplayName in the backend

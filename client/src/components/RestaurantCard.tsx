@@ -1,7 +1,8 @@
+import { apiUrl } from '../api/client'
 import { cuisineLabel, type Restaurant } from '../api/restaurants'
 
 export default function RestaurantCard({ restaurant }: { restaurant: Restaurant }) {
-  const photo = restaurant.photoUrls[0]
+  const photo = restaurant.profileImageUrl ? apiUrl(restaurant.profileImageUrl) : null
 
   return (
     <article className="flex flex-col overflow-hidden rounded border border-gray-200 bg-white">

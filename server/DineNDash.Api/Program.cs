@@ -3,6 +3,7 @@ using DineNDash.Api.Middleware;
 using DineNDash.Core.Interfaces;
 using DineNDash.Data;
 using DineNDash.Data.Repositories;
+using DineNDash.Data.Storage;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using DineNDash.Core.Services;
@@ -24,6 +25,12 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IRestaurantService, RestaurantService>();
+builder.Services.AddScoped<IMenuService, MenuService>();
+builder.Services.AddScoped<IImageService, ImageService>();
+
+// Relative paths are resolved from the API project folder, so uploads stay next to the running backend
+var imagesPath = Path.Combine(builder.Environment.ContentRootPath, builder.Configuration["Storage:ImagesPath"] ?? "uploads/images");
+builder.Services.AddSingleton<IImageStorage>(new LocalImageStorage(imagesPath));
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
 builder.Services.AddCors(options =>

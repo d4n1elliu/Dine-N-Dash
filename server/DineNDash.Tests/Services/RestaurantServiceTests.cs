@@ -14,23 +14,28 @@ public class RestaurantServiceTests
     private RestaurantService _restaurantService = null!;
     private InMemoryRepository<Restaurant> _restaurants = null!;
     private InMemoryRepository<Review> _reviews = null!;
+    private InMemoryRepository<Image> _images = null!;
+    private InMemoryImageStorage _storage = null!;
 
     [SetUp]
     public void SetUp()
     {
         _restaurants = new InMemoryRepository<Restaurant>();
         _reviews = new InMemoryRepository<Review>();
-        _restaurantService = new RestaurantService(_restaurants, _reviews);
+        _images = new InMemoryRepository<Image>();
+        _storage = new InMemoryImageStorage();
+        _restaurantService = new RestaurantService(_restaurants, _reviews, new ImageService(_images, _storage));
     }
 
-    private Task<Restaurant> AddRestaurant(string name, CuisineType cuisine = CuisineType.Other, string suburb = "Sydney", int priceLevel = 2) =>
+    private Task<Restaurant> AddRestaurant(string name, CuisineType cuisine = CuisineType.Other, string suburb = "Sydney", int priceLevel = 2, int ownerId = 0) =>
         _restaurants.AddAsync(new Restaurant
         {
             Name = name,
             Cuisine = cuisine,
             Address = "1 Test St",
             Suburb = suburb,
-            PriceLevel = priceLevel
+            PriceLevel = priceLevel,
+            OwnerId = ownerId
         });
 
     private Task<Review> AddReview(int restaurantId, int dinerId, int rating) =>
@@ -207,5 +212,103 @@ public class RestaurantServiceTests
     public void GetById_MissingRestaurant_ThrowsNotFound()
     {
         Assert.ThrowsAsync<NotFoundException>(() => _restaurantService.GetByIdAsync(99));
+    }
+
+    [Test]
+    public void GetForOwner_NoRestaurantYet_ThrowsNotFound()
+    {
+        Assert.ThrowsAsync<NotFoundException>(() => _restaurantService.GetForOwnerAsync(7));
+    }
+
+    [Test]
+    public async Task Create_SecondRestaurantForOwner_ThrowsConflict()
+    {
+        await AddRestaurant("First", ownerId: 7);
+
+        Assert.ThrowsAsync<ConflictException>(() => _restaurantService.CreateAsync(new Restaurant
+        {
+            Name = "Second",
+            Address = "2 Test St",
+            Suburb = "Sydney",
+            OwnerId = 7
+        }));
+    }
+
+    [Test]
+    public async Task Update_ChangesDetailsButNotOwner()
+    {
+        await AddRestaurant("Old Name", ownerId: 7);
+
+        var updated = await _restaurantService.UpdateAsync(7, new Restaurant
+        {
+            Name = "New Name",
+            Cuisine = CuisineType.Thai,
+            Address = "9 New St",
+            Suburb = "Newtown",
+            PriceLevel = 3,
+            Capacity = 50,
+            OwnerId = 99
+        });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(updated.Name, Is.EqualTo("New Name"));
+            Assert.That(updated.Cuisine, Is.EqualTo(CuisineType.Thai));
+            Assert.That(updated.Capacity, Is.EqualTo(50));
+            Assert.That(updated.OwnerId, Is.EqualTo(7));
+        });
+    }
+
+    [Test]
+    public async Task SetProfileImage_ReplacingImage_DeletesOldImageAndFile()
+    {
+        await AddRestaurant("Pic Place", ownerId: 7);
+
+        var first = await _restaurantService.SetProfileImageAsync(7, TestImages.Png(), "first.png");
+        int firstImageId = first.ProfileImageId!.Value;
+        var second = await _restaurantService.SetProfileImageAsync(7, TestImages.Jpeg(), "second.jpg");
+
+        var remaining = (await _images.GetAllAsync()).ToList();
+        Assert.Multiple(() =>
+        {
+            Assert.That(second.ProfileImageId, Is.Not.EqualTo(firstImageId));
+            Assert.That(remaining.Select(i => i.Id), Is.EqualTo(new[] { second.ProfileImageId }));
+            Assert.That(_storage.Files.Keys, Is.EqualTo(new[] { remaining[0].FileName }));
+        });
+    }
+
+    [Test]
+    public async Task RemoveProfileImage_ClearsLinkAndDeletesFile()
+    {
+        await AddRestaurant("Pic Place", ownerId: 7);
+        await _restaurantService.SetProfileImageAsync(7, TestImages.Png(), "photo.png");
+
+        var restaurant = await _restaurantService.RemoveProfileImageAsync(7);
+        var remaining = await _images.GetAllAsync();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(restaurant.ProfileImageId, Is.Null);
+            Assert.That(remaining, Is.Empty);
+            Assert.That(_storage.Files, Is.Empty);
+        });
+    }
+
+    [Test]
+    public async Task SetProfileImage_InvalidFile_KeepsExistingImage()
+    {
+        await AddRestaurant("Pic Place", ownerId: 7);
+        var withImage = await _restaurantService.SetProfileImageAsync(7, TestImages.Png(), "photo.png");
+        int imageId = withImage.ProfileImageId!.Value;
+
+        Assert.ThrowsAsync<BadRequestException>(() =>
+            _restaurantService.SetProfileImageAsync(7, new MemoryStream("not an image"u8.ToArray()), "fake.png"));
+
+        var restaurant = await _restaurantService.GetForOwnerAsync(7);
+        Assert.Multiple(() =>
+        {
+            Assert.That(restaurant.ProfileImageId, Is.EqualTo(imageId));
+            Assert.That(_storage.Files, Has.Count.EqualTo(1));
+        });
     }
 }

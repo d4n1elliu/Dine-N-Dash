@@ -13,11 +13,13 @@ public class RestaurantService : IRestaurantService
 
     private IRepository<Restaurant> _restaurants;
     private IRepository<Review> _reviews;
+    private IImageService _images;
 
-    public RestaurantService(IRepository<Restaurant> restaurants, IRepository<Review> reviews)
+    public RestaurantService(IRepository<Restaurant> restaurants, IRepository<Review> reviews, IImageService images)
     {
         _restaurants = restaurants;
         _reviews = reviews;
+        _images = images;
     }
 
     /// <summary>
@@ -97,34 +99,91 @@ public class RestaurantService : IRestaurantService
     }
 
     /// <summary>
-    /// Validates and stores a new restaurant
+    /// Returns the restaurant the owner manages
+    /// </summary>
+    public async Task<Restaurant> GetForOwnerAsync(int ownerId)
+    {
+        var allRestaurants = await _restaurants.GetAllAsync();
+        return allRestaurants.FirstOrDefault(restaurant => restaurant.OwnerId == ownerId)
+            ?? throw new NotFoundException("You have not created your restaurant profile yet.");
+    }
+
+    /// <summary>
+    /// Validates and stores a new restaurant, allowing one per owner
     /// </summary>
     public async Task<Restaurant> CreateAsync(Restaurant restaurant)
     {
         restaurant.Validate();
+
+        var allRestaurants = await _restaurants.GetAllAsync();
+        if (allRestaurants.Any(existing => existing.OwnerId == restaurant.OwnerId))
+        {
+            throw new ConflictException("You already have a restaurant profile.");
+        }
+
         return await _restaurants.AddAsync(restaurant);
     }
 
     /// <summary>
-    /// Saves changes to an existing restaurant, throwing when it does not exist
+    /// Saves new details on the owner's restaurant; the owner, image and timestamps are left alone
     /// </summary>
-    public async Task<Restaurant> UpdateAsync(Restaurant restaurant)
+    public async Task<Restaurant> UpdateAsync(int ownerId, Restaurant changes)
     {
-        var existing = await GetByIdAsync(restaurant.Id);
+        var existing = await GetForOwnerAsync(ownerId);
 
-        existing.Name = restaurant.Name;
-        existing.Description = restaurant.Description;
-        existing.Cuisine = restaurant.Cuisine;
-        existing.Address = restaurant.Address;
-        existing.Suburb = restaurant.Suburb;
-        existing.PriceLevel = restaurant.PriceLevel;
-        existing.Capacity = restaurant.Capacity;
-        existing.PhotoUrls = restaurant.PhotoUrls;
+        existing.Name = changes.Name;
+        existing.Description = changes.Description;
+        existing.Cuisine = changes.Cuisine;
+        existing.Address = changes.Address;
+        existing.Suburb = changes.Suburb;
+        existing.PriceLevel = changes.PriceLevel;
+        existing.Capacity = changes.Capacity;
         existing.Validate();
         existing.UpdatedAt = DateTime.UtcNow;
 
         await _restaurants.UpdateAsync(existing);
         return existing;
+    }
+
+    /// <summary>
+    /// Points the restaurant at the new image before deleting the old one, so it is never left without a valid image
+    /// </summary>
+    public async Task<Restaurant> SetProfileImageAsync(int ownerId, Stream content, string fileName)
+    {
+        var restaurant = await GetForOwnerAsync(ownerId);
+        var image = await _images.UploadAsync(content, fileName);
+        int? oldImageId = restaurant.ProfileImageId;
+
+        restaurant.ProfileImageId = image.Id;
+        restaurant.UpdatedAt = DateTime.UtcNow;
+        await _restaurants.UpdateAsync(restaurant);
+
+        if (oldImageId != null)
+        {
+            await _images.DeleteAsync(oldImageId.Value);
+        }
+
+        return restaurant;
+    }
+
+    /// <summary>
+    /// Clears the profile image and deletes its file
+    /// </summary>
+    public async Task<Restaurant> RemoveProfileImageAsync(int ownerId)
+    {
+        var restaurant = await GetForOwnerAsync(ownerId);
+        if (restaurant.ProfileImageId == null)
+        {
+            return restaurant;
+        }
+
+        int oldImageId = restaurant.ProfileImageId.Value;
+        restaurant.ProfileImageId = null;
+        restaurant.UpdatedAt = DateTime.UtcNow;
+        await _restaurants.UpdateAsync(restaurant);
+        await _images.DeleteAsync(oldImageId);
+
+        return restaurant;
     }
 
     private static void ValidatePaging(int page, int pageSize)

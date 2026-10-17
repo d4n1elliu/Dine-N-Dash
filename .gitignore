@@ -35,3 +35,5 @@ Thumbs.db
 
 # Node
 node_modules/
+# Uploaded images saved by the backend
+server/DineNDash.Api/uploads/
