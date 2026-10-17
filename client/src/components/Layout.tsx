@@ -12,6 +12,8 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 export default function Layout() {
   const { isAuthenticated, user, logout } = useAuth()
   const navigate = useNavigate()
+  // Restaurant owners have no home page, so their logo and nav lead to the dashboard
+  const isOwner = user?.role === 'RestaurantOwner'
 
   function handleLogout() {
     startTransition(() => {
@@ -24,13 +26,15 @@ export default function Layout() {
     <div className="flex min-h-screen flex-col bg-gray-50 text-gray-900">
       <header className="border-b border-gray-200 bg-white">
         <nav className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-3">
-          <Link to={ROUTES.home} className="text-xl font-bold text-orange-600">
+          <Link to={isOwner ? ROUTES.restaurantDashboard : ROUTES.home} className="text-xl font-bold text-orange-600">
             Dine N Dash
           </Link>
           <div className="flex items-center gap-1">
-            <NavLink to={ROUTES.home} end className={navLinkClass}>
-              Home
-            </NavLink>
+            {!isOwner && (
+              <NavLink to={ROUTES.home} end className={navLinkClass}>
+                Home
+              </NavLink>
+            )}
             <NavLink to={dashboardFor(user?.role)} className={navLinkClass}>
               Dashboard
             </NavLink>
