@@ -19,7 +19,7 @@ on demand), independently of `.github/workflows/ci.yml`.
 
 1. The runner writes `SSH_KEY` to a `chmod 600` file, then verifies the host key:
    `ssh-keyscan -t ed25519` fetches it and its SHA256 fingerprint must equal
-   `SSH_HOST_FINGERPRINT` before it is added to `known_hosts` — no
+   the pinned `SSH_HOST_FINGERPRINT` before it is added to `known_hosts` — no
    trust-on-first-use, and SSH still runs with `StrictHostKeyChecking=yes`.
 2. Over SSH it runs, in `/var/www/dine-n-dash` (a pull-only clone):
    `git fetch --prune origin`, then `git reset --hard origin/main`, then
@@ -38,7 +38,11 @@ Required **repository secrets** (names only, set under
 | `SSH_HOST` | VPS host name or IP |
 | `SSH_USER` | SSH user that owns `/var/www/dine-n-dash` and can run Docker |
 | `SSH_KEY` | Private key for that user (its public half in the server's `authorized_keys`) |
-| `SSH_HOST_FINGERPRINT` | Pinned `SHA256:...` fingerprint of the server's ed25519 host key. Get it with `ssh-keyscan -t ed25519 <host> \| ssh-keygen -lf -`; the deploy fails if the scanned key does not match, so a MITM cannot be trusted silently |
+| `SSH_HOST_FINGERPRINT` | Pinned `SHA256:...` fingerprint of the server's ed25519 host key, taken from a trusted source — on the VPS console run `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` (or `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key -E sha256`) and record the `SHA256:...` it prints. The deploy fails if the scanned key does not match, so a MITM cannot be trusted silently |
+
+Never copy `SSH_HOST_FINGERPRINT` from `ssh-keyscan`: that sources the pin from the
+same network path it protects, which is trust-on-first-use again. The workflow
+only uses `ssh-keyscan` to compare the live key with this trusted value.
 
 Run it manually from *Actions → Deploy → Run workflow*, or:
 
