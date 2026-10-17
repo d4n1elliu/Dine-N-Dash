@@ -70,6 +70,16 @@ export function searchRestaurants(search: RestaurantSearch): Promise<PagedRespon
   return api.get<PagedResponse<Restaurant>>(`/api/restaurant?${toQuery({ ...search })}`)
 }
 
+// Resolves to null when no restaurant has that id
+export async function getRestaurant(id: number): Promise<Restaurant | null> {
+  try {
+    return await api.get<Restaurant>(`/api/restaurant/${id}`)
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null
+    throw error
+  }
+}
+
 // Resolves to null when the owner has not created their restaurant yet
 export async function getMyRestaurant(): Promise<RestaurantProfile | null> {
   try {
