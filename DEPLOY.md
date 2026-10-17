@@ -17,8 +17,10 @@ not used in production.
 `.github/workflows/deploy.yml` deploys to the VPS on every push to `main` (and
 on demand), independently of `.github/workflows/ci.yml`.
 
-1. The runner writes `SSH_KEY` to a `chmod 600` file and records the host key
-   with `ssh-keyscan` (host key checking stays `yes`).
+1. The runner writes `SSH_KEY` to a `chmod 600` file, then verifies the host key:
+   `ssh-keyscan -t ed25519` fetches it and its SHA256 fingerprint must equal
+   `SSH_HOST_FINGERPRINT` before it is added to `known_hosts` — no
+   trust-on-first-use, and SSH still runs with `StrictHostKeyChecking=yes`.
 2. Over SSH it runs, in `/var/www/dine-n-dash` (a pull-only clone):
    `git fetch --prune origin`, then `git reset --hard origin/main`, then
    `docker compose -f docker-compose.prod.yml --env-file .env.prod up --build -d`
@@ -36,6 +38,7 @@ Required **repository secrets** (names only, set under
 | `SSH_HOST` | VPS host name or IP |
 | `SSH_USER` | SSH user that owns `/var/www/dine-n-dash` and can run Docker |
 | `SSH_KEY` | Private key for that user (its public half in the server's `authorized_keys`) |
+| `SSH_HOST_FINGERPRINT` | Pinned `SHA256:...` fingerprint of the server's ed25519 host key. Get it with `ssh-keyscan -t ed25519 <host> \| ssh-keygen -lf -`; the deploy fails if the scanned key does not match, so a MITM cannot be trusted silently |
 
 Run it manually from *Actions → Deploy → Run workflow*, or:
 

@@ -18,12 +18,12 @@ jobs:
   deploy:
     name: Deploy to VPS
     runs-on: ubuntu-latest
-    # CI lives in its own workflow and runs in parallel.
-    needs: []
+    # CI is a separate workflow and runs in parallel; this job has no dependencies.
     env:
       SSH_HOST: ${{ secrets.SSH_HOST }}
       SSH_USER: ${{ secrets.SSH_USER }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+      SSH_HOST_FINGERPRINT: ${{ secrets.SSH_HOST_FINGERPRINT }}
       DEPLOY_PATH: /var/www/dine-n-dash
       HEALTH_URL: https://dine-n-dash.sunwookim.dev/api/health
 
@@ -32,7 +32,7 @@ jobs:
         run: |
           set -euo pipefail
           missing=""
-          for name in SSH_HOST SSH_USER SSH_PRIVATE_KEY; do
+          for name in SSH_HOST SSH_USER SSH_PRIVATE_KEY SSH_HOST_FINGERPRINT; do
             if [ -z "${!name}" ]; then
               missing="$missing $name"
             fi
@@ -52,22 +52,53 @@ jobs:
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
+      # Replaces trust-on-first-use: the scanned host key is only accepted when
+      # its SHA256 fingerprint matches the pinned SSH_HOST_FINGERPRINT secret, so
+      # a MITM answering the keyscan is rejected instead of silently trusted.
       - name: Trust the host key
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
+
+          tmp_key=$(mktemp)
+          trap 'rm -f "$tmp_key"' EXIT
+
+          # Request only the ed25519 key so `ssh-keygen -lf` yields exactly one
+          # fingerprint to compare against.
+          scanned=0
           for attempt in 1 2 3; do
-            if ssh-keyscan -T 15 -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null \
-               && [ -s ~/.ssh/known_hosts ]; then
-              echo "Host key recorded in ~/.ssh/known_hosts."
-              exit 0
+            if ssh-keyscan -T 15 -t ed25519 "$SSH_HOST" > "$tmp_key" 2>/dev/null \
+               && [ -s "$tmp_key" ]; then
+              scanned=1
+              break
             fi
             echo "ssh-keyscan attempt $attempt failed, retrying..."
             sleep 5
           done
-          echo "::error::Could not fetch the host key for $SSH_HOST"
-          exit 1
+          if [ "$scanned" -ne 1 ]; then
+            echo "::error::Could not fetch the ed25519 host key for $SSH_HOST"
+            exit 1
+          fi
+
+          # `ssh-keygen -lf` prints "<bits> SHA256:<hash> <host> (<type>)".
+          received=$(ssh-keygen -lf "$tmp_key" -E sha256 | awk '{print $2}' | sed 's/[[:space:]]*$//')
+          expected=$(printf '%s' "$SSH_HOST_FINGERPRINT" | tr -d '[:space:]')
+          if [ -z "$received" ]; then
+            echo "::error::Could not read a fingerprint from the scanned host key"
+            exit 1
+          fi
+
+          # A mismatch fails on the first attempt: retrying would only ever help
+          # transient network errors, which the loop above already handles.
+          if [ "$received" != "$expected" ]; then
+            echo "::error::Host key fingerprint mismatch for $SSH_HOST: expected $expected, received $received"
+            exit 1
+          fi
+
+          cat "$tmp_key" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          echo "Host key verified against the pinned fingerprint ($expected) and recorded in ~/.ssh/known_hosts."
 
       - name: Deploy over SSH
         run: |
