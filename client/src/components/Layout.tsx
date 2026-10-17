@@ -35,9 +35,11 @@ export default function Layout() {
                 Home
               </NavLink>
             )}
-            <NavLink to={dashboardFor(user?.role)} className={navLinkClass}>
-              Dashboard
-            </NavLink>
+            {isAuthenticated && (
+              <NavLink to={dashboardFor(user?.role)} className={navLinkClass}>
+                Dashboard
+              </NavLink>
+            )}
             {isAuthenticated ? (
               <button
                 type="button"
