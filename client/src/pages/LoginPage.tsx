@@ -7,20 +7,20 @@ import FormField from '../components/FormField'
 import TextLink from '../components/TextLink'
 import { useAuth } from '../context/useAuth'
 import { useSubmit } from '../hooks/useSubmit'
-import { ROUTES, type RedirectState } from '../routes'
+import { homeFor, ROUTES, type RedirectState } from '../routes'
 
 export default function LoginPage() {
-  const { login, isAuthenticated } = useAuth()
+  const { login, isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const { submitting, error, setError, run } = useSubmit('Login failed. Please try again.')
 
-  const redirectTo = (location.state as RedirectState | null)?.from ?? ROUTES.dashboard
+  const returnTo = (location.state as RedirectState | null)?.from
 
   if (isAuthenticated) {
-    return <Navigate to={redirectTo} replace />
+    return <Navigate to={returnTo ?? homeFor(user?.role)} replace />
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -36,8 +36,8 @@ export default function LoginPage() {
     }
 
     void run(async () => {
-      await login(email, password)
-      navigate(redirectTo, { replace: true })
+      const signedIn = await login(email, password)
+      navigate(returnTo ?? homeFor(signedIn.role), { replace: true })
     })
   }
 
@@ -67,7 +67,9 @@ export default function LoginPage() {
         </Button>
       </form>
       <p className="mt-4 text-center text-sm text-gray-600">
-        Don&apos;t have an account? <TextLink to={ROUTES.register}>Sign up</TextLink>
+        Don&apos;t have an account? <TextLink to={ROUTES.register} state={location.state}>
+          Sign up
+        </TextLink>
       </p>
     </section>
   )

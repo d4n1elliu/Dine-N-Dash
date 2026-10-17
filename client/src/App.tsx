@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage'
 import NotFoundPage from './pages/NotFoundPage'
 import RegisterPage from './pages/RegisterPage'
 import RestaurantDashboardPage from './pages/RestaurantDashboardPage'
+import RestaurantPage from './pages/RestaurantPage'
 import SearchPage from './pages/SearchPage'
 import { ROUTES } from './routes'
 
@@ -19,6 +20,7 @@ function App() {
           <Route path={ROUTES.home} element={<HomePage />} />
         </Route>
         <Route path={ROUTES.search} element={<SearchPage />} />
+        <Route path={ROUTES.restaurant} element={<RestaurantPage />} />
         <Route path={ROUTES.login} element={<LoginPage />} />
         <Route path={ROUTES.register} element={<RegisterPage />} />
 

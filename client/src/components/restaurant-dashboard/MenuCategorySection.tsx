@@ -14,6 +14,7 @@ import {
 } from '../../api/menu'
 import { useSubmit } from '../../hooks/useSubmit'
 import { dangerButtonClass, inputClass, outlineButtonClass } from '../../lib/form-styles'
+import { formatPrice } from '../../lib/format'
 import Button from '../Button'
 import FormError from '../FormError'
 import ImageUpload from '../ImageUpload'
@@ -24,8 +25,6 @@ interface MenuCategorySectionProps {
   categories: MenuCategory[]
   onChanged: () => void
 }
-
-const priceFormat = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' })
 
 export default function MenuCategorySection({ category, categories, onChanged }: MenuCategorySectionProps) {
   const [renaming, setRenaming] = useState(false)
@@ -151,7 +150,7 @@ export default function MenuCategorySection({ category, categories, onChanged }:
                   <p className="font-medium">{item.name}</p>
                   {item.description && <p className="text-sm text-gray-600">{item.description}</p>}
                 </div>
-                <p className="font-medium">{priceFormat.format(item.price)}</p>
+                <p className="font-medium">{formatPrice(item.price)}</p>
                 <div className="flex gap-2">
                   <button type="button" className={outlineButtonClass} onClick={() => setEditingItemId(item.id)}>
                     Edit
