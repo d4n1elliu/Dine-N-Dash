@@ -241,5 +241,5 @@ The website is deployed on a VPS. Only code merged into `main` is deployed.
 | Name | Role | Contribution |
 |---|---|---|
 | Daniel Liu | Code Quality, Code Requirements | Project setup, backend architecture, database with Entity Framework, core models and interfaces, API client, routing and auth state, register, login and JWT authentication, sign up page |
-| Sun Woo Kim | | |
+| Sun Woo Kim | FullStack SWE | Recommended restaurants, search restaurants, edit restaurant profile, edit restaurant menu, deployment |
 | Gurpreet Kaur | Interface Design, Code Requirements | Bookings, Reviews, Customer Dashboard (bookmarks, edit profile details, view bookings) |
