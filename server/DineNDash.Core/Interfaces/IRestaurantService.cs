@@ -4,7 +4,7 @@ using DineNDash.Core.Models;
 namespace DineNDash.Core.Interfaces;
 
 /// <summary>
-/// Not implemented yet; the restaurant endpoints are still to come
+/// Browsing, searching and managing restaurants
 /// </summary>
 public interface IRestaurantService
 {
@@ -12,6 +12,10 @@ public interface IRestaurantService
     /// A null filter is ignored rather than matched
     /// </summary>
     Task<IEnumerable<Restaurant>> SearchAsync(string? name, CuisineType? cuisine, string? suburb, string? sortBy);
+    /// <summary>
+    /// Returns the highest rated restaurants, with unreviewed ones filling any remaining spots
+    /// </summary>
+    Task<IEnumerable<Restaurant>> GetRecommendedAsync(int count);
     /// <summary>
     /// Throws NotFoundException rather than returning null, unlike the repository
     /// </summary>
