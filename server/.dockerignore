@@ -1,0 +1,37 @@
+# Build output (restored and produced inside the image)
+**/bin/
+**/obj/
+**/out/
+**/publish/
+
+# IDE / editor artefacts
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.user
+**/*.suo
+**/*.DotSettings.user
+
+# Test project and artefacts (not needed to build or run the API)
+DineNDash.Tests/
+**/TestResults/
+**/*.trx
+**/coverage*.xml
+**/coverage*.json
+
+# Locally uploaded images must never be baked into the image
+DineNDash.Api/uploads/
+
+# Secrets / local environment
+.env
+.env.*
+**/secrets.json
+**/*.pfx
+**/*.pem
+**/*.key
+
+# VCS and OS noise
+.git/
+.gitignore
+**/.DS_Store
+**/Thumbs.db

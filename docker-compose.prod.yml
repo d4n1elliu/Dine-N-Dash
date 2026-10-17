@@ -1,0 +1,55 @@
+# Production stack for the VPS.
+#
+# Both containers join the pre-existing external `proxy` network and publish no
+# host ports: the host reverse proxy talks to them by container name.
+# Postgres is the shared instance already running on that network, so it is not
+# defined here.
+#
+# Deploy with:
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up --build -d
+
+services:
+  backend:
+    build:
+      context: ./server
+      dockerfile: DineNDash.Api/Dockerfile
+    image: dinendash-backend:latest
+    container_name: dinendash-backend
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      # Trust X-Forwarded-Proto/For from the host proxy so TLS end-to-end and
+      # UseHttpsRedirection() behave correctly.
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      TZ: Australia/Sydney
+      # Single allowed CORS origin (Frontend:Url).
+      Frontend__Url: https://dine-n-dash.sunwookim.dev
+      # Npgsql connection string built from the values in .env.prod.
+      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      # Jwt:Key — symmetric signing key, must be >= 32 characters.
+      Jwt__Key: ${JWT_KEY}
+    volumes:
+      # Uploaded images live at ContentRootPath/uploads/images and must outlive
+      # the container.
+      - dinendash-uploads:/app/uploads
+    networks:
+      - proxy
+
+  web:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    image: dinendash-web:latest
+    container_name: dinendash-web
+    restart: unless-stopped
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
+    name: proxy
+
+volumes:
+  dinendash-uploads:
