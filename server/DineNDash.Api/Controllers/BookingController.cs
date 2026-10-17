@@ -54,13 +54,13 @@ public class BookingController : ControllerBase
     }
 
     /// <summary>
-    /// Lists a restaurant's bookings, earliest first
+    /// Lists the bookings at the owner's restaurant, earliest first, with diner names
     /// </summary>
     [Authorize(Roles = "RestaurantOwner")]
-    [HttpGet("restaurant/{restaurantId}")]
-    public async Task<IActionResult> GetForRestaurant(int restaurantId) 
+    [HttpGet("restaurant")]
+    public async Task<IActionResult> GetForMyRestaurant() 
     {
-        var bookings = await _bookingService.GetForRestaurantAsync(restaurantId); 
+        var bookings = await _bookingService.GetForOwnerAsync(User.GetUserId()); 
         return Ok(bookings.Select(ToResponse));
     }
 
@@ -76,14 +76,25 @@ public class BookingController : ControllerBase
     }
 
     /// <summary>
-    /// Changes a booking status, for example when the restaurant confirms it
+    /// Confirms a pending booking at the owner's restaurant
     /// </summary>
     [Authorize(Roles = "RestaurantOwner")]
-    [HttpPut("{id}/status")]
-    public async Task <IActionResult> UpdateStatus(int id, [FromQuery] BookingStatus status)
+    [HttpPost("{id}/accept")]
+    public async Task<IActionResult> Accept(int id)
     {
-        var updated = await _bookingService.UpdateStatusAsync(id, status); 
-        return Ok(ToResponse(updated)); 
+        var booking = await _bookingService.RespondAsync(User.GetUserId(), id, accept: true); 
+        return Ok(ToResponse(booking)); 
+    }
+
+    /// <summary>
+    /// Declines a pending booking at the owner's restaurant
+    /// </summary>
+    [Authorize(Roles = "RestaurantOwner")]
+    [HttpPost("{id}/decline")]
+    public async Task<IActionResult> Decline(int id)
+    {
+        var booking = await _bookingService.RespondAsync(User.GetUserId(), id, accept: false); 
+        return Ok(ToResponse(booking)); 
     }
 
     /// <summary>
@@ -102,6 +113,7 @@ public class BookingController : ControllerBase
         Id = booking.Id,
         RestaurantId = booking.RestaurantId,
         RestaurantName = booking.Restaurant?.Name,
+        DinerName = booking.Diner?.Name,
         BookingTime = booking.BookingTime,
         PartySize = booking.PartySize,
         Status = booking.Status, 

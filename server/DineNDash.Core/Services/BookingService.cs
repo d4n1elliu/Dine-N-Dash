@@ -12,11 +12,15 @@ public class BookingService : IBookingService
 {
     private IRepository<Booking> _bookings;
     private IRepository<Restaurant> _restaurants; 
+    private IRepository<DinerAccount> _diners;
+    private IRestaurantService _restaurantService;
 
-    public BookingService(IRepository<Booking> bookings, IRepository<Restaurant> restaurants) 
+    public BookingService(IRepository<Booking> bookings, IRepository<Restaurant> restaurants, IRepository<DinerAccount> diners, IRestaurantService restaurantService) 
     {
         _bookings = bookings;
         _restaurants = restaurants;
+        _diners = diners;
+        _restaurantService = restaurantService;
     }
 
     /// <summary>
@@ -58,16 +62,49 @@ public class BookingService : IBookingService
     }
 
     /// <summary>
-    /// Sets a new status on an existing booking, used by the restaurant side
+    /// Returns the owner's restaurant bookings ordered by time, with diner names for the dashboard
     /// </summary>
-    public async Task<Booking> UpdateStatusAsync(int bookingId, BookingStatus status) 
-    { 
-        var booking = await _bookings.GetByIdAsync(bookingId) ?? throw new NotFoundException("Unable to find booking."); 
-        booking.Status = status;
-        booking.UpdatedAt = DateTime.UtcNow; 
-        await _bookings.UpdateAsync(booking); 
-        return booking; 
+    public async Task<IEnumerable<Booking>> GetForOwnerAsync(int ownerId) 
+    {
+        var restaurant = await _restaurantService.GetForOwnerAsync(ownerId);
+        var bookings = (await GetForRestaurantAsync(restaurant.Id)).ToList();
+        var diners = (await _diners.GetAllAsync()).ToDictionary(diner => diner.Id);
 
+        foreach (var booking in bookings) 
+        {
+            booking.Diner = diners.GetValueOrDefault(booking.DinerId);
+        }
+
+        return bookings;
+    }
+
+    /// <summary>
+    /// Only pending bookings that have not started can be accepted or declined; other restaurants' bookings count as missing
+    /// </summary>
+    public async Task<Booking> RespondAsync(int ownerId, int bookingId, bool accept) 
+    {
+        var restaurant = await _restaurantService.GetForOwnerAsync(ownerId);
+        var booking = await _bookings.GetByIdAsync(bookingId);
+
+        if (booking == null || booking.RestaurantId != restaurant.Id) 
+        {
+            throw new NotFoundException("Unable to find booking.");
+        }
+
+        if (booking.Status != BookingStatus.Pending) 
+        {
+            throw new BadRequestException("Only pending bookings can be accepted or declined.");
+        }
+
+        if (booking.BookingTime <= DateTime.UtcNow) 
+        {
+            throw new BadRequestException("This booking time has already passed.");
+        }
+
+        booking.Status = accept ? BookingStatus.Confirmed : BookingStatus.Declined;
+        booking.UpdatedAt = DateTime.UtcNow;
+        await _bookings.UpdateAsync(booking);
+        return booking;
     }
 
     /// <summary>

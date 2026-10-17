@@ -63,7 +63,7 @@ namespace DineNDash.Data.Migrations
                     b.ToTable("Bookings");
                 });
 
-            modelBuilder.Entity("DineNDash.Core.Models.MenuItem", b =>
+            modelBuilder.Entity("DineNDash.Core.Models.Image", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -71,26 +71,49 @@ namespace DineNDash.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Category")
+                    b.Property<string>("ContentType")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
+                    b.Property<string>("FileName")
+                        .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FileName")
+                        .IsUnique();
+
+                    b.ToTable("Images");
+                });
+
+            modelBuilder.Entity("DineNDash.Core.Models.MenuCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<string>("PhotoUrl")
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("Price")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("numeric(10,2)");
 
                     b.Property<int>("RestaurantId")
                         .HasColumnType("integer");
@@ -100,7 +123,48 @@ namespace DineNDash.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RestaurantId");
+                    b.HasIndex("RestaurantId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("MenuCategories");
+                });
+
+            modelBuilder.Entity("DineNDash.Core.Models.MenuItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("ImageId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MenuCategoryId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImageId");
+
+                    b.HasIndex("MenuCategoryId");
 
                     b.ToTable("MenuItems");
                 });
@@ -137,11 +201,10 @@ namespace DineNDash.Data.Migrations
                     b.Property<int>("OwnerId")
                         .HasColumnType("integer");
 
-                    b.PrimitiveCollection<string[]>("PhotoUrls")
-                        .IsRequired()
-                        .HasColumnType("text[]");
-
                     b.Property<int>("PriceLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ProfileImageId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Suburb")
@@ -155,6 +218,8 @@ namespace DineNDash.Data.Migrations
 
                     b.HasIndex("OwnerId")
                         .IsUnique();
+
+                    b.HasIndex("ProfileImageId");
 
                     b.ToTable("Restaurants");
                 });
@@ -275,15 +340,33 @@ namespace DineNDash.Data.Migrations
                     b.Navigation("Restaurant");
                 });
 
-            modelBuilder.Entity("DineNDash.Core.Models.MenuItem", b =>
+            modelBuilder.Entity("DineNDash.Core.Models.MenuCategory", b =>
                 {
                     b.HasOne("DineNDash.Core.Models.Restaurant", "Restaurant")
-                        .WithMany("MenuItems")
+                        .WithMany("MenuCategories")
                         .HasForeignKey("RestaurantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Restaurant");
+                });
+
+            modelBuilder.Entity("DineNDash.Core.Models.MenuItem", b =>
+                {
+                    b.HasOne("DineNDash.Core.Models.Image", "Image")
+                        .WithMany()
+                        .HasForeignKey("ImageId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("DineNDash.Core.Models.MenuCategory", "MenuCategory")
+                        .WithMany("MenuItems")
+                        .HasForeignKey("MenuCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Image");
+
+                    b.Navigation("MenuCategory");
                 });
 
             modelBuilder.Entity("DineNDash.Core.Models.Restaurant", b =>
@@ -294,7 +377,14 @@ namespace DineNDash.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("DineNDash.Core.Models.Image", "ProfileImage")
+                        .WithMany()
+                        .HasForeignKey("ProfileImageId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Owner");
+
+                    b.Navigation("ProfileImage");
                 });
 
             modelBuilder.Entity("DineNDash.Core.Models.Review", b =>
@@ -316,11 +406,16 @@ namespace DineNDash.Data.Migrations
                     b.Navigation("Restaurant");
                 });
 
+            modelBuilder.Entity("DineNDash.Core.Models.MenuCategory", b =>
+                {
+                    b.Navigation("MenuItems");
+                });
+
             modelBuilder.Entity("DineNDash.Core.Models.Restaurant", b =>
                 {
                     b.Navigation("Bookings");
 
-                    b.Navigation("MenuItems");
+                    b.Navigation("MenuCategories");
 
                     b.Navigation("Reviews");
                 });

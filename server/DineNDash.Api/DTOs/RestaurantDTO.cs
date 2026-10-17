@@ -14,7 +14,29 @@ public class RestaurantResponse
     public string Address { get; set; } = string.Empty;
     public string Suburb { get; set; } = string.Empty;
     public int PriceLevel { get; set; }
-    public ICollection<string> PhotoUrls { get; set; } = [];
+    public string? ProfileImageUrl { get; set; }
+}
+
+/// <summary>
+/// The owner's view of their restaurant, including details diners do not see
+/// </summary>
+public class RestaurantProfileResponse : RestaurantResponse
+{
+    public int Capacity { get; set; }
+}
+
+/// <summary>
+/// Details an owner sets when creating or editing their restaurant
+/// </summary>
+public class RestaurantProfileRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public CuisineType Cuisine { get; set; }
+    public string Address { get; set; } = string.Empty;
+    public string Suburb { get; set; } = string.Empty;
+    public int PriceLevel { get; set; } = 2;
+    public int Capacity { get; set; } = 20;
 }
 
 /// <summary>

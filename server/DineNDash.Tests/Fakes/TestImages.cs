@@ -1,0 +1,11 @@
+namespace DineNDash.Tests.Fakes;
+
+/// <summary>
+/// Smallest byte sequences that pass the image format checks
+/// </summary>
+public static class TestImages
+{
+    public static MemoryStream Png() => new([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x01]);
+    public static MemoryStream Jpeg() => new([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x01]);
+    public static MemoryStream WebP() => new("RIFF\0\0\0\0WEBPVP8 "u8.ToArray());
+}
