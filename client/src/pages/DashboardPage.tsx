@@ -1,7 +1,7 @@
 import { useAuth } from '../context/useAuth'
 import { useSearchParams } from 'react-router-dom'
-import MyBookings from '../components/dashboard/MyBookings'
-import MyReviews from '../components/dashboard/MyReviews'
+import MyBookings from '../components/customer-dashboard/MyBookings'
+import MyReviews from '../components/customer-dashboard/MyReviews'
 
 type Tab = 'bookings' | 'reviews'
 

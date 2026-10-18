@@ -5,6 +5,7 @@ import { getMenu, type MenuCategory, type MenuItem } from '../api/menu'
 import { cuisineLabel, getRestaurant } from '../api/restaurants'
 import Button from '../components/Button'
 import TextLink from '../components/TextLink'
+import ReviewsSection from '../components/reviews/ReviewsSection'
 import { useAuth } from '../context/useAuth'
 import { useApi } from '../hooks/useApi'
 import { formatPrice } from '../lib/format'
@@ -83,6 +84,7 @@ export default function RestaurantPage() {
             .map((category) => <MenuSection key={category.id} category={category} />)
         )}
       </section>
+      <ReviewsSection restaurantId={restaurant.id} />
     </article>
   )
 }
