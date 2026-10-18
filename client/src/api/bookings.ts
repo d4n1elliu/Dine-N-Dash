@@ -55,3 +55,12 @@ export function checkAvailability(
   })
   return api.get<{ available: boolean }>(`/api/booking/availability?${query}`)
 }
+
+export function getMyBookings(): Promise<Booking[]> {
+  return api.get<Booking[]>('/api/booking/mine')
+}
+
+export function cancelBooking(id: number): Promise<void> {
+  return api.post<void>(`/api/booking/${id}/cancel`)
+}
+
