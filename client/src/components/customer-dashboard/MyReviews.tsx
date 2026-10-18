@@ -7,14 +7,13 @@ import { dangerButtonClass, smallPrimaryButtonClass } from '../../lib/form-style
 import { restaurantPath, ROUTES } from '../../routes'
 import FormError from '../FormError'
 import TextLink from '../TextLink'
+import { MAX_COMMENT_LENGTH } from '../../lib/reviews'
+import Stars from '../reviews/Stars'
 
 const dateFormat = new Intl.DateTimeFormat('en-AU', { dateStyle: 'medium' })
 const secondaryButtonClass = 'rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-50'
 const inputClass =
   'w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm focus:border-orange-500 focus:outline-none'
-
-// Keep in sync with Review.Validate() in the backend
-const MAX_COMMENT_LENGTH = 500
 
 export default function MyReviews() {
   const reviews = useApi(getMyReviews)
@@ -39,15 +38,6 @@ export default function MyReviews() {
         <ReviewCard key={review.id} review={review} onChanged={reviews.reload} />
       ))}
     </ul>
-  )
-}
-
-function Stars({ rating }: { rating: number }) {
-  return (
-    <span aria-label={`${rating} out of 5 stars`} className="text-amber-500">
-      {'★'.repeat(rating)}
-      {'☆'.repeat(5 - rating)}
-    </span>
   )
 }
 
@@ -134,10 +124,10 @@ function ReviewCard({ review, onChanged }: { review: Review; onChanged: () => vo
             {confirmingDelete ? (
               <>
                 <button type="button" className={dangerButtonClass} disabled={submitting} onClick={remove}>
-                  {submitting ? 'Deleting...' : 'Yes, delete'}
+                  {submitting ? 'Deleting...' : 'Confirm delete'}
                 </button>
                 <button type="button" className={secondaryButtonClass} disabled={submitting} onClick={() => setConfirmingDelete(false)}>
-                  Keep it
+                  Never mind
                 </button>
               </>
             ) : (
