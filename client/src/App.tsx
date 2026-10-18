@@ -10,6 +10,7 @@ import RegisterPage from './pages/RegisterPage'
 import RestaurantDashboardPage from './pages/RestaurantDashboardPage'
 import RestaurantPage from './pages/RestaurantPage'
 import SearchPage from './pages/SearchPage'
+import BookRestaurantPage from './pages/BookRestaurantPage'
 import { ROUTES } from './routes'
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
         </Route>
         <Route path={ROUTES.search} element={<SearchPage />} />
         <Route path={ROUTES.restaurant} element={<RestaurantPage />} />
+        <Route path={ROUTES.bookRestaurant} element={<BookRestaurantPage />} />
         <Route path={ROUTES.login} element={<LoginPage />} />
         <Route path={ROUTES.register} element={<RegisterPage />} />
 

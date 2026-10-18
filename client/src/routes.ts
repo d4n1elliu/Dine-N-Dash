@@ -8,10 +8,15 @@ export const ROUTES = {
   register: '/register',
   dashboard: '/dashboard',
   restaurantDashboard: '/restaurant/dashboard',
+  bookRestaurant: '/restaurants/:id/book',
 } as const
 
 export function restaurantPath(id: number): string {
   return `/restaurants/${id}`
+}
+
+export function bookingPath(id: number): string {
+  return `/restaurants/${id}/book`
 }
 
 // Where a user lands after logging in or registering when no earlier page asked to return to
