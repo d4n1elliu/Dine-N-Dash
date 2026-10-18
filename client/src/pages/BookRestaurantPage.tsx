@@ -4,26 +4,27 @@ import { Navigate, useLocation, useParams } from 'react-router-dom'
 import { checkAvailability, createBooking, type Booking } from '../api/bookings'
 import { getMenu, type MenuCategory } from '../api/menu'
 import { getRestaurant } from '../api/restaurants'
+import BookingConfirmation from '../components/booking/BookingConfirmation'
+import PreOrderPicker from '../components/booking/PreOrderPicker'
 import Button from '../components/Button'
 import FormError from '../components/FormError'
 import TextLink from '../components/TextLink'
 import { useAuth } from '../context/useAuth'
 import { useApi } from '../hooks/useApi'
 import { useSubmit } from '../hooks/useSubmit'
-import { formatPrice } from '../lib/format'
+import {
+  buildSpecialRequests,
+  MAX_PARTY_SIZE,
+  MAX_PER_DISH,
+  slotLabel,
+  TIME_SLOTS,
+  toDateInputValue,
+  toStartTime,
+} from '../lib/booking'
 import { restaurantPath, ROUTES, type RedirectState } from '../routes'
 
-const MAX_PARTY_SIZE = 20
-const MAX_PER_DISH = 10
 const inputClass =
   'w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm focus:border-orange-500 focus:outline-none'
-const timeFormat = new Intl.DateTimeFormat('en-AU', { dateStyle: 'full', timeStyle: 'short' })
-
-// 11:00 to 21:30 in half hour steps, so two bookings for the same slot always share an exact time
-const TIME_SLOTS = Array.from({ length: 22 }, (_, i) => {
-  const minutes = 11 * 60 + i * 30
-  return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`
-})
 
 async function loadBookingData(id: number) {
   const restaurant = await getRestaurant(id)
@@ -103,9 +104,7 @@ function BookingForm({ restaurantId, restaurantName, menu }: BookingFormProps) {
   const availability = useApi(fetchAvailability)
   const slotFull = availability.data?.available === false
 
-  const categories = menu.filter((category) => category.items.length > 0)
-
-  // Clears the error on edit so it never describes a value the user has since changed
+  // Clears the error on edit so the information is not outdated 
   const onFieldChange =
     (setValue: (value: string) => void) =>
     (event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -150,21 +149,7 @@ function BookingForm({ restaurantId, restaurantName, menu }: BookingFormProps) {
     })
   }
 
-  if (booked) {
-    return (
-      <section className="mx-auto max-w-lg space-y-4 text-center">
-        <h1 className="text-3xl font-bold">Booking requested</h1>
-        <p className="text-gray-800">
-          {restaurantName} · {booked.partySize} {booked.partySize === 1 ? 'guest' : 'guests'} ·{' '}
-          {timeFormat.format(new Date(booked.bookingTime))}
-        </p>
-        <p className="text-gray-600">
-          The restaurant will confirm your booking. You can follow its status on your dashboard.
-        </p>
-        <TextLink to={ROUTES.dashboard}>Go to my dashboard</TextLink>
-      </section>
-    )
-  }
+  if (booked) return <BookingConfirmation restaurantName={restaurantName} booking={booked} />
 
   return (
     <section className="mx-auto max-w-2xl space-y-6">
@@ -216,46 +201,7 @@ function BookingForm({ restaurantId, restaurantName, menu }: BookingFormProps) {
           </p>
         )}
 
-        {categories.length > 0 && (
-          <fieldset className="space-y-3">
-            <legend className="text-sm font-medium">Pre-order dishes (optional)</legend>
-            {categories.map((category) => (
-              <div key={category.id}>
-                <h2 className="text-sm font-semibold text-gray-700">{category.name}</h2>
-                <ul className="divide-y divide-gray-100">
-                  {category.items.map((item) => (
-                    <li key={item.id} className="flex items-center gap-3 py-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium">{item.name}</p>
-                        <p className="text-xs text-gray-600">{formatPrice(item.price)}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          aria-label={`Remove one ${item.name}`}
-                          disabled={(quantities[item.id] ?? 0) === 0}
-                          onClick={() => changeQuantity(item.id, -1)}
-                          className="rounded border border-gray-300 px-2 py-1 text-sm disabled:opacity-40"
-                        >
-                          −
-                        </button>
-                        <span className="w-6 text-center text-sm">{quantities[item.id] ?? 0}</span>
-                        <button
-                          type="button"
-                          aria-label={`Add one ${item.name}`}
-                          onClick={() => changeQuantity(item.id, 1)}
-                          className="rounded border border-gray-300 px-2 py-1 text-sm"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </fieldset>
-        )}
+        <PreOrderPicker menu={menu} quantities={quantities} onChange={changeQuantity} />
 
         <label className="block space-y-1 text-sm font-medium">
           Notes for the restaurant (optional)
@@ -278,35 +224,4 @@ function BookingForm({ restaurantId, restaurantName, menu }: BookingFormProps) {
       <TextLink to={restaurantPath(restaurantId)}>Back to restaurant</TextLink>
     </section>
   )
-}
-
-function toDateInputValue(date: Date): string {
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${date.getFullYear()}-${month}-${day}`
-}
-
-// Combines the chosen date and time in the user's own timezone; toISOString then gives the exact moment
-function toStartTime(date: string, time: string): Date | null {
-  if (!date || !time) return null
-  const start = new Date(`${date}T${time}`)
-  return Number.isNaN(start.getTime()) ? null : start
-}
-
-function slotLabel(slot: string): string {
-  const [hours, minutes] = slot.split(':').map(Number)
-  return `${hours % 12 || 12}:${String(minutes).padStart(2, '0')} ${hours >= 12 ? 'pm' : 'am'}`
-}
-
-// The backend has one free-text field, so pre-ordered dishes go in front of the diner's own notes
-function buildSpecialRequests(menu: MenuCategory[], quantities: Record<number, number>, notes: string): string | null {
-  const dishes = menu
-    .flatMap((category) => category.items)
-    .filter((item) => (quantities[item.id] ?? 0) > 0)
-    .map((item) => `${quantities[item.id]}x ${item.name}`)
-
-  const parts: string[] = []
-  if (dishes.length > 0) parts.push(`Pre-order: ${dishes.join(', ')}.`)
-  if (notes.trim()) parts.push(`Notes: ${notes.trim()}`)
-  return parts.length > 0 ? parts.join(' ') : null
 }

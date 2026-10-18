@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { apiUrl } from '../api/client'
 import { getMenu, type MenuCategory, type MenuItem } from '../api/menu'
 import { cuisineLabel, getRestaurant } from '../api/restaurants'
@@ -90,7 +90,6 @@ export default function RestaurantPage() {
 function BookButton({ restaurantId }: { restaurantId: number }) {
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
 
   function handleClick() {
     if (!isAuthenticated) {
