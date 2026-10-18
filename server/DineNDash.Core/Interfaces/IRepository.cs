@@ -1,4 +1,5 @@
 using DineNDash.Core.Models;
+using System.Linq.Expressions;
 
 namespace DineNDash.Core.Interfaces;
 
@@ -7,7 +8,7 @@ namespace DineNDash.Core.Interfaces;
 /// </summary>
 public interface IRepository<T> where T : BaseEntity
 {
-    Task<IEnumerable<T>> GetAllAsync();
+    Task<IEnumerable<T>> GetAllAsync(params Expression<Func<T, object>>[] includes);
     Task<T?> GetByIdAsync(int id);
     Task<T> AddAsync(T entity);
     Task UpdateAsync(T entity);

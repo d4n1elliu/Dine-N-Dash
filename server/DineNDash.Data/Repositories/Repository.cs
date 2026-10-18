@@ -1,6 +1,7 @@
 using DineNDash.Core.Interfaces;
 using DineNDash.Core.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace DineNDash.Data.Repositories;
 
@@ -14,8 +15,15 @@ public class Repository<T>(AppDbContext context) : IRepository<T> where T : Base
     /// <summary>
     /// Returns every row untracked, so callers cannot accidentally save changes
     /// </summary>
-    public async Task<IEnumerable<T>> GetAllAsync() =>
-        await DbSet.AsNoTracking().ToListAsync();
+    public async Task<IEnumerable<T>> GetAllAsync(params Expression<Func<T, object>>[] includes)
+    {
+        IQueryable<T> query = context.Set<T>();
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+        return await query.ToListAsync();
+    }
 
     /// <summary>
     /// Returns one row by id, or null when it does not exist
