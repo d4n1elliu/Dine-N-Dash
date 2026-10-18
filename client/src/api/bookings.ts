@@ -31,3 +31,27 @@ export function acceptBooking(id: number): Promise<Booking> {
 export function declineBooking(id: number): Promise<Booking> {
   return api.post<Booking>(`/api/booking/${id}/decline`)
 }
+
+export interface CreateBookingInput {
+  restaurantId: number
+  bookingTime: string 
+  partySize: number
+  specialRequests: string | null
+}
+
+export function createBooking(input: CreateBookingInput): Promise<Booking> {
+  return api.post<Booking>('/api/booking', input)
+}
+
+export function checkAvailability(
+  restaurantId: number,
+  bookingTime: string,
+  partySize: number,
+): Promise<{ available: boolean }> {
+  const query = new URLSearchParams({
+    restaurantId: String(restaurantId),
+    time: bookingTime,
+    partySize: String(partySize),
+  })
+  return api.get<{ available: boolean }>(`/api/booking/availability?${query}`)
+}

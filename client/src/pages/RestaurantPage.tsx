@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { apiUrl } from '../api/client'
 import { getMenu, type MenuCategory, type MenuItem } from '../api/menu'
 import { cuisineLabel, getRestaurant } from '../api/restaurants'
@@ -9,6 +9,7 @@ import { useAuth } from '../context/useAuth'
 import { useApi } from '../hooks/useApi'
 import { formatPrice } from '../lib/format'
 import { ROUTES, type RedirectState } from '../routes'
+import { bookingPath } from '../routes'
 
 // Loads the restaurant and its menu together; a missing restaurant resolves to null rather than an error
 async function loadRestaurant(id: number) {
@@ -68,7 +69,7 @@ export default function RestaurantPage() {
             <p className="text-sm text-gray-600">{restaurant.address}</p>
             {restaurant.description && <p className="max-w-prose text-gray-800">{restaurant.description}</p>}
           </div>
-          <BookButton />
+          <BookButton restaurantId={restaurant.id}/>
         </div>
       </div>
 
@@ -86,17 +87,18 @@ export default function RestaurantPage() {
   )
 }
 
-// Guests are sent to sign up and brought back here afterwards; for signed in users the button does nothing until the booking flow is built
-function BookButton() {
+function BookButton({ restaurantId }: { restaurantId: number }) {
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
 
   function handleClick() {
     if (!isAuthenticated) {
-      const state: RedirectState = { from: location.pathname }
+      // Guests are sent to sign up and brought back here afterwards if not logged in 
+      const state: RedirectState = { from: bookingPath(restaurantId) }
       navigate(ROUTES.register, { state })
+      return
     }
+    navigate(bookingPath(restaurantId))
   }
 
   return (
