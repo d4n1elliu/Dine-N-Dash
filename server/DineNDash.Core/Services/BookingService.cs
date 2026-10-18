@@ -44,7 +44,7 @@ public class BookingService : IBookingService
     /// </summary>
     public async Task<IEnumerable<Booking>> GetForDinerAsync(int dinerId) 
     { 
-        var allBookings = await _bookings.GetAllAsync();
+        var allBookings = await _bookings.GetAllAsync(booking => booking.Restaurant!);
         return allBookings.Where(booking => booking.DinerId == dinerId)
                           .OrderBy(booking => booking.BookingTime)
                           .ToList(); 

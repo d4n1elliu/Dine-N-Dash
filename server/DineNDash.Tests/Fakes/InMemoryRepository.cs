@@ -1,5 +1,6 @@
 using DineNDash.Core.Interfaces;
 using DineNDash.Core.Models;
+using System.Linq.Expressions;
 
 namespace DineNDash.Tests.Fakes;
 
@@ -11,7 +12,8 @@ public class InMemoryRepository<T> : IRepository<T> where T : BaseEntity
     private readonly List<T> _items = [];
     private int _nextId = 1;
 
-    public Task<IEnumerable<T>> GetAllAsync() => Task.FromResult<IEnumerable<T>>(_items.ToList());
+    public Task<IEnumerable<T>> GetAllAsync(params Expression<Func<T, object>>[] includes)
+        => Task.FromResult<IEnumerable<T>>(_items.ToList());
 
     public Task<T?> GetByIdAsync(int id) => Task.FromResult(_items.FirstOrDefault(i => i.Id == id));
 

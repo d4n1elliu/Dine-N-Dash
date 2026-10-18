@@ -68,7 +68,7 @@ public class ReviewService : IReviewService
     /// </summary>
     public async Task<IEnumerable<Review>> GetForDinerAsync(int dinerId) 
     { 
-        var allReviews = await _reviews.GetAllAsync();
+        var allReviews = await _reviews.GetAllAsync(review => review.Restaurant!);
         return allReviews.Where(review => review.DinerId == dinerId)
                          .OrderByDescending(review => review.CreatedAt)
                          .ToList();
@@ -79,7 +79,7 @@ public class ReviewService : IReviewService
     /// </summary>
     public async Task<IEnumerable<Review>> GetForRestaurantAsync(int restaurantId) 
     { 
-        var allReviews = await _reviews.GetAllAsync();
+        var allReviews = await _reviews.GetAllAsync(review => review.Diner!);
         return allReviews.Where(review => review.RestaurantId == restaurantId)
                          .OrderByDescending(review => review.CreatedAt)
                          .ToList();
