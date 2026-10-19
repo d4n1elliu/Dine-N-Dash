@@ -4,6 +4,7 @@ import { apiUrl } from '../api/client'
 import { getMenu, type MenuCategory, type MenuItem } from '../api/menu'
 import { cuisineLabel, getRestaurant } from '../api/restaurants'
 import Button from '../components/Button'
+import RestaurantImage from '../components/RestaurantImage'
 import TextLink from '../components/TextLink'
 import ReviewsSection from '../components/reviews/ReviewsSection'
 import { useAuth } from '../context/useAuth'
@@ -45,21 +46,10 @@ export default function RestaurantPage() {
     )
   }
 
-  const photo = restaurant.profileImageUrl ? apiUrl(restaurant.profileImageUrl) : null
-
   return (
     <article className="space-y-8">
       <div className="overflow-hidden rounded border border-gray-200 bg-white">
-        {photo ? (
-          <img src={photo} alt={restaurant.name} className="h-64 w-full object-cover sm:h-80" />
-        ) : (
-          <div
-            aria-hidden="true"
-            className="flex h-40 items-center justify-center bg-orange-50 text-5xl font-bold text-orange-300"
-          >
-            {restaurant.name.charAt(0)}
-          </div>
-        )}
+        <RestaurantImage imageUrl={restaurant.profileImageUrl} name={restaurant.name} className="h-64 text-5xl sm:h-80" />
         <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1 space-y-2">
             <h1 className="text-3xl font-bold">{restaurant.name}</h1>
