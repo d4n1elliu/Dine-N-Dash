@@ -1,24 +1,16 @@
 import { Link } from 'react-router-dom'
-import { apiUrl } from '../api/client'
 import { cuisineLabel, type Restaurant } from '../api/restaurants'
 import { restaurantPath } from '../routes'
+import RestaurantImage from './RestaurantImage'
 
 export default function RestaurantCard({ restaurant }: { restaurant: Restaurant }) {
-  const photo = restaurant.profileImageUrl ? apiUrl(restaurant.profileImageUrl) : null
-
   return (
     <Link
       to={restaurantPath(restaurant.id)}
       className="flex h-full flex-col overflow-hidden rounded border border-gray-200 bg-white transition hover:border-orange-300 hover:shadow-md focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
     >
       {/* The heading names the link, so the photo stays decorative */}
-      {photo ? (
-        <img src={photo} alt="" className="h-40 w-full object-cover" />
-      ) : (
-        <div aria-hidden="true" className="flex h-40 items-center justify-center bg-orange-50 text-3xl font-bold text-orange-300">
-          {restaurant.name.charAt(0)}
-        </div>
-      )}
+      <RestaurantImage imageUrl={restaurant.profileImageUrl} name={restaurant.name} alt="" className="h-40 text-3xl" />
       <div className="flex flex-1 flex-col gap-1 p-4">
         <h3 className="font-semibold">{restaurant.name}</h3>
         <p className="text-sm text-gray-600">

@@ -25,6 +25,11 @@
     <ProjectReference Include="..\DineNDash.Data\DineNDash.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Starting photos for the sample restaurants, copied to the output so the seed finds them in Docker too -->
+    <None Update="Seed\Images\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
 
 
