@@ -6,13 +6,17 @@ import BookingsTab from '../components/restaurant-dashboard/BookingsTab'
 import MenuTab from '../components/restaurant-dashboard/MenuTab'
 import ProfileTab from '../components/restaurant-dashboard/ProfileTab'
 import { useApi } from '../hooks/useApi'
+import AnalyticsTab from '../components/restaurant-dashboard/AnalyticsTab'
+import ReviewsSection from '../components/reviews/ReviewsSection'
 
-type Tab = 'profile' | 'menu' | 'bookings'
+type Tab = 'profile' | 'menu' | 'bookings' | 'analytics' | 'reviews'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'profile', label: 'Profile' },
   { id: 'menu', label: 'Menu' },
   { id: 'bookings', label: 'Bookings' },
+  { id: 'analytics', label: 'Analytics'},
+  { id: 'reviews', label: 'Reviews'},
 ]
 
 const SETUP_STEPS = ['Restaurant profile', 'Menu']
@@ -97,6 +101,8 @@ export default function RestaurantDashboardPage() {
         {tab === 'profile' && <ProfileTab profile={profile} onSaved={setSavedProfile} />}
         {tab === 'menu' && <MenuTab menu={menu} />}
         {tab === 'bookings' && <BookingsTab />}
+        {tab === 'analytics' && <AnalyticsTab />}
+        {tab === 'reviews' && <ReviewsSection restaurantId={profile.id} />}
       </div>
     </section>
   )

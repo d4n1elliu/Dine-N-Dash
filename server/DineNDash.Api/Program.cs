@@ -27,6 +27,7 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IRestaurantService, RestaurantService>();
 builder.Services.AddScoped<IMenuService, MenuService>();
 builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddScoped<IBookingAnalyticsService, BookingAnalyticsService>();
 
 // Relative paths are resolved from the API project folder, so uploads stay next to the running backend
 var imagesPath = Path.Combine(builder.Environment.ContentRootPath, builder.Configuration["Storage:ImagesPath"] ?? "uploads/images");
