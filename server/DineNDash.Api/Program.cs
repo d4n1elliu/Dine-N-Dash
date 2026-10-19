@@ -28,6 +28,7 @@ builder.Services.AddScoped<IRestaurantService, RestaurantService>();
 builder.Services.AddScoped<IMenuService, MenuService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IBookingAnalyticsService, BookingAnalyticsService>();
+builder.Services.AddScoped<IRestaurantImageSeeder, RestaurantImageSeeder>();
 
 // Relative paths are resolved from the API project folder, so uploads stay next to the running backend
 var imagesPath = Path.Combine(builder.Environment.ContentRootPath, builder.Configuration["Storage:ImagesPath"] ?? "uploads/images");
@@ -50,6 +51,9 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
 }
+
+// Gives the sample restaurants their photos; skips any that already have one, so restarting is safe
+await app.SeedRestaurantImagesAsync();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
