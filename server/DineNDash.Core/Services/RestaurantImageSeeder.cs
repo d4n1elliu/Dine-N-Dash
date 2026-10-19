@@ -26,15 +26,22 @@ public class RestaurantImageSeeder : IRestaurantImageSeeder
 
         foreach (var seed in images)
         {
-            var restaurant = allRestaurants.FirstOrDefault(candidate =>
-                string.Equals(candidate.Name.Trim(), seed.RestaurantName.Trim(), StringComparison.OrdinalIgnoreCase));
+            var matches = allRestaurants.Where(candidate =>
+                string.Equals(candidate.Name.Trim(), seed.RestaurantName.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
 
-            if (restaurant == null)
+            if (matches.Count == 0)
             {
                 result.Unmatched.Add(seed.RestaurantName);
                 continue;
             }
 
+            if (matches.Count > 1)
+            {
+                result.Ambiguous.Add(seed.RestaurantName);
+                continue;
+            }
+
+            var restaurant = matches[0];
             if (restaurant.ProfileImageId != null)
             {
                 result.Skipped++;

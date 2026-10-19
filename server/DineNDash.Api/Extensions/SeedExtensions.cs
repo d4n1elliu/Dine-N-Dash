@@ -45,6 +45,10 @@ public static class SeedExtensions
             {
                 app.Logger.LogWarning("No restaurant named {Restaurant} to seed an image for", name);
             }
+            foreach (var name in result.Ambiguous)
+            {
+                app.Logger.LogWarning("More than one restaurant is named {Restaurant}, so none was given the seed image", name);
+            }
         }
         catch (Exception exception)
         {

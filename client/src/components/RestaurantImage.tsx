@@ -28,7 +28,7 @@ export default function RestaurantImage({ imageUrl, name, className, alt = name 
       aria-hidden="true"
       className={`${className} flex items-center justify-center bg-orange-50 font-bold text-orange-300`}
     >
-      {name.charAt(0)}
+      {Array.from(name)[0] ?? ''}
     </div>
   )
 }

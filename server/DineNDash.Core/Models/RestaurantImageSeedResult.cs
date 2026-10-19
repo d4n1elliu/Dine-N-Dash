@@ -6,12 +6,7 @@ namespace DineNDash.Core.Models;
 public class RestaurantImageSeedResult
 {
     public int Seeded { get; set; }
-    /// <summary>
-    /// Restaurants that already had a profile image and were left alone
-    /// </summary>
     public int Skipped { get; set; }
-    /// <summary>
-    /// Restaurant names from the seed list that do not exist in the database
-    /// </summary>
     public List<string> Unmatched { get; } = [];
+    public List<string> Ambiguous { get; } = [];
 }

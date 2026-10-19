@@ -83,6 +83,24 @@ public class RestaurantImageSeederTests
     }
 
     [Test]
+    public async Task Seed_SameNameTwice_IsReportedAndNeitherGetsTheImage()
+    {
+        await AddRestaurant("Chat Thai", ownerId: 1);
+        await AddRestaurant("Chat Thai", ownerId: 2);
+
+        var result = await _seeder.SeedAsync([Seed("Chat Thai", "chat-thai.jpg")]);
+
+        var restaurants = (await _restaurants.GetAllAsync()).ToList();
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.Ambiguous, Is.EqualTo(new[] { "Chat Thai" }));
+            Assert.That(result.Seeded, Is.EqualTo(0));
+            Assert.That(restaurants.All(r => r.ProfileImageId == null), Is.True);
+            Assert.That(_images.GetAllAsync().Result, Is.Empty);
+        });
+    }
+
+    [Test]
     public async Task Seed_KeepsImageTheOwnerUploaded()
     {
         await AddRestaurant("Chat Thai", ownerId: 1);
