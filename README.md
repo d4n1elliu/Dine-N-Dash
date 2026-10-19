@@ -236,6 +236,16 @@ Secrets are never stored in the repository.
 
 The website is deployed on a VPS. Only code merged into `main` is deployed.
 
+## Future Work
+
+### Restaurant recommendations (KNN)
+
+- Planned as a bonus feature but not implemented due to time constraints.
+
+**What it does**
+
+KNN (k-nearest neighbours) is an algorithm that finds the k items most similar to a given item by measuring how close their features are. Here it would show the five restaurants most similar to the one being viewed, based on cuisine, suburb, price range and average rating. A cheap Thai place in Newtown would recommend other cheap Thai or nearby restaurants with similar ratings.
+
 ## Team
 
 | Name | Role | Contribution |
