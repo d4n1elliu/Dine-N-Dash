@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { useAuth } from '../context/useAuth'
 import { dashboardFor, ROUTES } from '../routes'
 import { buttonClass } from '../lib/button-styles'
+import Footer from './Footer'
 import Logo from './Logo'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -73,6 +74,7 @@ export default function Layout() {
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
         <Outlet />
       </main>
+      <Footer />
     </div>
   )
 }
