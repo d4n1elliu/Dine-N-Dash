@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { CUISINES, cuisineLabel, searchRestaurants, type Cuisine, type RestaurantSort } from '../api/restaurants'
+import FilterSelect from '../components/FilterSelect'
 import RestaurantResults from '../components/RestaurantResults'
 import SearchBar from '../components/SearchBar'
 import { useApi } from '../hooks/useApi'
@@ -11,10 +12,6 @@ const SORT_OPTIONS: { value: RestaurantSort; label: string }[] = [
   { value: 'rating', label: 'Rating' },
   { value: 'price', label: 'Price' },
 ]
-
-const filterLabelClass = 'text-sm font-medium'
-const selectClass =
-  'h-10 w-40 rounded border border-gray-300 bg-white pl-3 pr-8 text-sm focus:border-orange-500 focus:outline-none'
 
 function readCuisine(value: string | null): Cuisine | undefined {
   return CUISINES.find((cuisine) => cuisine === value)
@@ -61,41 +58,31 @@ export default function SearchPage() {
       <div className="space-y-3">
         <SearchBar key={name} initialValue={name} onSearch={(query) => updateParam('name', query)} />
         <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
-          <div className="flex items-center gap-3">
-            <label htmlFor="cuisine-filter" className={filterLabelClass}>
-              Cuisine
-            </label>
-            <select
-              id="cuisine-filter"
-              value={cuisine ?? ''}
-              onChange={(e) => updateParam('cuisine', e.target.value)}
-              className={selectClass}
-            >
-              <option value="">Any</option>
-              {CUISINES.map((option) => (
-                <option key={option} value={option}>
-                  {cuisineLabel(option)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex items-center gap-3">
-            <label htmlFor="sort-filter" className={filterLabelClass}>
-              Sort by
-            </label>
-            <select
-              id="sort-filter"
-              value={sortBy}
-              onChange={(e) => updateParam('sortBy', e.target.value === 'name' ? '' : e.target.value)}
-              className={selectClass}
-            >
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <FilterSelect
+            id="cuisine-filter"
+            label="Cuisine"
+            value={cuisine ?? ''}
+            onChange={(value) => updateParam('cuisine', value)}
+          >
+            <option value="">Any</option>
+            {CUISINES.map((option) => (
+              <option key={option} value={option}>
+                {cuisineLabel(option)}
+              </option>
+            ))}
+          </FilterSelect>
+          <FilterSelect
+            id="sort-filter"
+            label="Sort by"
+            value={sortBy}
+            onChange={(value) => updateParam('sortBy', value === 'name' ? '' : value)}
+          >
+            {SORT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </FilterSelect>
         </div>
       </div>
 
