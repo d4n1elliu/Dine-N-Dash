@@ -5,6 +5,7 @@ import { getMenu, type MenuCategory, type MenuItem } from '../api/menu'
 import { cuisineLabel, getRestaurant } from '../api/restaurants'
 import Button from '../components/Button'
 import RestaurantImage from '../components/RestaurantImage'
+import SimilarRestaurants from '../components/SimilarRestaurants'
 import TextLink from '../components/TextLink'
 import ReviewsSection from '../components/reviews/ReviewsSection'
 import { useAuth } from '../context/useAuth'
@@ -75,6 +76,8 @@ export default function RestaurantPage() {
         )}
       </section>
       <ReviewsSection restaurantId={restaurant.id} />
+      {/* The key restarts the section for each restaurant, so the previous one's list never shows */}
+      <SimilarRestaurants key={restaurant.id} restaurantId={restaurant.id} />
     </article>
   )
 }
