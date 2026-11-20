@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { CUISINES, cuisineLabel, searchRestaurants, type Cuisine, type RestaurantSort } from '../api/restaurants'
+import FilterInput from '../components/FilterInput'
 import FilterSelect from '../components/FilterSelect'
 import RestaurantResults from '../components/RestaurantResults'
 import SearchBar from '../components/SearchBar'
@@ -26,12 +27,13 @@ export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const name = searchParams.get('name') ?? ''
   const cuisine = readCuisine(searchParams.get('cuisine'))
+  const suburb = searchParams.get('suburb') ?? ''
   const sortBy = readSort(searchParams.get('sortBy'))
   const page = readPageParam(searchParams)
 
   const fetchResults = useCallback(
-    () => searchRestaurants({ name, cuisine, sortBy, page, pageSize: 9 }),
-    [name, cuisine, sortBy, page],
+    () => searchRestaurants({ name, cuisine, suburb, sortBy, page, pageSize: 9 }),
+    [name, cuisine, suburb, sortBy, page],
   )
   const results = useApi(fetchResults)
 
@@ -71,6 +73,14 @@ export default function SearchPage() {
               </option>
             ))}
           </FilterSelect>
+          <FilterInput
+            key={suburb}
+            id="suburb-filter"
+            label="Suburb"
+            value={suburb}
+            placeholder="Any"
+            onCommit={(value) => updateParam('suburb', value)}
+          />
           <FilterSelect
             id="sort-filter"
             label="Sort by"
