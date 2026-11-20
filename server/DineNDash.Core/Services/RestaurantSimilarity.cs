@@ -36,6 +36,14 @@ public static class RestaurantSimilarity
     });
 
     /// <summary>
+    /// Pairs a restaurant with its rating. An unreviewed restaurant gets the neutral rating so it is not treated as badly rated
+    /// </summary>
+    public static RestaurantFeatures ToFeatures(Restaurant restaurant, IReadOnlyDictionary<int, RatingSummary> ratings, double neutralRating) =>
+        ratings.TryGetValue(restaurant.Id, out var summary)
+            ? new RestaurantFeatures(restaurant, summary.Average, summary.Count)
+            : new RestaurantFeatures(restaurant, neutralRating, 0);
+
+    /// <summary>
     /// Weighted Euclidean distance, where 0 means identical and larger means less alike
     /// </summary>
     public static double Distance(RestaurantFeatures a, RestaurantFeatures b) =>

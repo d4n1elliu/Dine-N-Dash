@@ -17,6 +17,11 @@ public interface IRestaurantService
     /// </summary>
     Task<PagedResult<Restaurant>> GetRecommendedAsync(int page, int pageSize);
     /// <summary>
+    /// Returns up to count restaurants most like the given one, nearest first.
+    /// Throws NotFoundException for an unknown id and BadRequestException for an invalid count
+    /// </summary>
+    Task<IReadOnlyList<Restaurant>> GetSimilarAsync(int restaurantId, int count);
+    /// <summary>
     /// Throws NotFoundException rather than returning null, unlike the repository
     /// </summary>
     Task<Restaurant> GetByIdAsync(int id);

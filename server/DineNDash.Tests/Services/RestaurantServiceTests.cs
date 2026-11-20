@@ -209,6 +209,98 @@ public class RestaurantServiceTests
     }
 
     [Test]
+    public async Task GetSimilar_ReturnsCountNearestFirst()
+    {
+        var target = await AddRestaurant("Thai Target", CuisineType.Thai, "Newtown", 1);
+        await AddRestaurant("Pricey Italian", CuisineType.Italian, "Bondi", 4);
+        await AddRestaurant("Thai Elsewhere", CuisineType.Thai, "Glebe", 1);
+        await AddRestaurant("Thai Next Door", CuisineType.Thai, "Newtown", 1);
+
+        var results = await _restaurantService.GetSimilarAsync(target.Id, 2);
+
+        Assert.That(results.Select(r => r.Name), Is.EqualTo(new[] { "Thai Next Door", "Thai Elsewhere" }));
+    }
+
+    [Test]
+    public async Task GetSimilar_FewerThanCount_ReturnsAllOthersWithoutTarget()
+    {
+        var target = await AddRestaurant("Target");
+        await AddRestaurant("Other A");
+        await AddRestaurant("Other B");
+
+        var results = await _restaurantService.GetSimilarAsync(target.Id, 5);
+
+        Assert.That(results.Select(r => r.Name), Is.EquivalentTo(new[] { "Other A", "Other B" }));
+    }
+
+    [Test]
+    public async Task GetSimilar_OnlyRestaurant_ReturnsEmpty()
+    {
+        var target = await AddRestaurant("Target");
+
+        var results = await _restaurantService.GetSimilarAsync(target.Id, 5);
+
+        Assert.That(results, Is.Empty);
+    }
+
+    [Test]
+    public async Task GetSimilar_UnreviewedRestaurant_UsesGlobalMeanRating()
+    {
+        var target = await AddRestaurant("Target");
+        var unreviewed = await AddRestaurant("Unreviewed");
+        var lowRated = await AddRestaurant("Low Rated");
+        await AddReview(target.Id, 1, 4);
+        await AddReview(lowRated.Id, 1, 1);
+
+        var results = await _restaurantService.GetSimilarAsync(target.Id, 2);
+
+        // The global mean is 2.5, closer to the target's 4 than the low rating of 1
+        Assert.That(results.Select(r => r.Name), Is.EqualTo(new[] { "Unreviewed", "Low Rated" }));
+    }
+
+    [Test]
+    public async Task GetSimilar_NoReviewsAnywhere_RanksByOtherFeatures()
+    {
+        var target = await AddRestaurant("Target", CuisineType.Thai, "Newtown", 1);
+        await AddRestaurant("Different", CuisineType.Italian, "Bondi", 4);
+        await AddRestaurant("Alike", CuisineType.Thai, "Newtown", 2);
+
+        var results = await _restaurantService.GetSimilarAsync(target.Id, 2);
+
+        Assert.That(results.Select(r => r.Name), Is.EqualTo(new[] { "Alike", "Different" }));
+    }
+
+    [Test]
+    public async Task GetSimilar_EqualDistances_OrdersByReviewCountThenName()
+    {
+        var target = await AddRestaurant("Target");
+        await AddRestaurant("Beta");
+        await AddRestaurant("Alpha");
+        var popular = await AddRestaurant("Zulu");
+        await AddReview(popular.Id, 1, 3);
+
+        var results = await _restaurantService.GetSimilarAsync(target.Id, 3);
+
+        // Zulu's only review sets the global mean, so every rating is 3 and all distances tie
+        Assert.That(results.Select(r => r.Name), Is.EqualTo(new[] { "Zulu", "Alpha", "Beta" }));
+    }
+
+    [Test]
+    public void GetSimilar_MissingRestaurant_ThrowsNotFound()
+    {
+        Assert.ThrowsAsync<NotFoundException>(() => _restaurantService.GetSimilarAsync(99, 5));
+    }
+
+    [TestCase(0)]
+    [TestCase(RestaurantService.MaxSimilarCount + 1)]
+    public async Task GetSimilar_InvalidCount_ThrowsBadRequest(int count)
+    {
+        var target = await AddRestaurant("Target");
+
+        Assert.ThrowsAsync<BadRequestException>(() => _restaurantService.GetSimilarAsync(target.Id, count));
+    }
+
+    [Test]
     public void GetById_MissingRestaurant_ThrowsNotFound()
     {
         Assert.ThrowsAsync<NotFoundException>(() => _restaurantService.GetByIdAsync(99));

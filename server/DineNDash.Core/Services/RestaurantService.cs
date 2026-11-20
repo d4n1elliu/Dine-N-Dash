@@ -10,6 +10,7 @@ namespace DineNDash.Core.Services;
 public class RestaurantService : IRestaurantService
 {
     public const int MaxPageSize = 50;
+    public const int MaxSimilarCount = 10;
 
     private IRepository<Restaurant> _restaurants;
     private IRepository<Review> _reviews;
@@ -85,6 +86,37 @@ public class RestaurantService : IRestaurantService
                                    .ToList();
 
         return ToPage(ranked, page, pageSize);
+    }
+
+    /// <summary>
+    /// Finds the nearest restaurants by cuisine, suburb, price and rating using KNN
+    /// </summary>
+    public async Task<IReadOnlyList<Restaurant>> GetSimilarAsync(int restaurantId, int count)
+    {
+        if (count is < 1 or > MaxSimilarCount)
+        {
+            throw new BadRequestException($"Count must be between 1 and {MaxSimilarCount}.");
+        }
+
+        var allRestaurants = (await _restaurants.GetAllAsync()).ToList();
+        var target = allRestaurants.FirstOrDefault(restaurant => restaurant.Id == restaurantId)
+            ?? throw new NotFoundException("Unable to find restaurant.");
+
+        var allReviews = (await _reviews.GetAllAsync()).ToList();
+        var ratings = RatingStats.ByRestaurant(allReviews);
+        double neutralRating = RatingStats.GlobalMean(allReviews);
+
+        var others = allRestaurants.Where(restaurant => restaurant.Id != restaurantId)
+                                   .Select(restaurant => RestaurantSimilarity.ToFeatures(restaurant, ratings, neutralRating));
+
+        var nearest = Knn.FindNearest(
+            RestaurantSimilarity.ToFeatures(target, ratings, neutralRating),
+            others,
+            count,
+            RestaurantSimilarity.Distance,
+            RestaurantSimilarity.TieBreaker);
+
+        return nearest.Select(features => features.Restaurant).ToList();
     }
 
     /// <summary>
