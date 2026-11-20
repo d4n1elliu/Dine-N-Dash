@@ -58,8 +58,8 @@ public class RestaurantService : IRestaurantService
                                 .ThenBy(restaurant => restaurant.Name);
                 break;
             case "rating":
-                var averages = await GetAverageRatingsAsync();
-                sorted = matches.OrderByDescending(restaurant => averages.GetValueOrDefault(restaurant.Id))
+                var ratings = await GetRatingsAsync();
+                sorted = matches.OrderByDescending(restaurant => ratings.GetValueOrDefault(restaurant.Id).Average)
                                 .ThenBy(restaurant => restaurant.Name);
                 break;
             default:
@@ -77,10 +77,7 @@ public class RestaurantService : IRestaurantService
         ValidatePaging(page, pageSize);
 
         var allRestaurants = await _restaurants.GetAllAsync();
-        var allReviews = await _reviews.GetAllAsync();
-        var ratings = allReviews.GroupBy(review => review.RestaurantId)
-                                .ToDictionary(group => group.Key,
-                                              group => (Average: group.Average(review => review.Rating), Count: group.Count()));
+        var ratings = await GetRatingsAsync();
 
         var ranked = allRestaurants.OrderByDescending(restaurant => ratings.GetValueOrDefault(restaurant.Id).Average)
                                    .ThenByDescending(restaurant => ratings.GetValueOrDefault(restaurant.Id).Count)
@@ -210,10 +207,6 @@ public class RestaurantService : IRestaurantService
         TotalCount = sorted.Count
     };
 
-    private async Task<Dictionary<int, double>> GetAverageRatingsAsync()
-    {
-        var allReviews = await _reviews.GetAllAsync();
-        return allReviews.GroupBy(review => review.RestaurantId)
-                         .ToDictionary(group => group.Key, group => group.Average(review => review.Rating));
-    }
+    private async Task<Dictionary<int, RatingSummary>> GetRatingsAsync() =>
+        RatingStats.ByRestaurant(await _reviews.GetAllAsync());
 }
