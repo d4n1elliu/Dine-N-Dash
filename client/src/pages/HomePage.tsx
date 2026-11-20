@@ -1,8 +1,8 @@
 import { useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getRecommendedRestaurants } from '../api/restaurants'
+import HomeHero from '../components/HomeHero'
 import RestaurantResults from '../components/RestaurantResults'
-import SearchBar from '../components/SearchBar'
 import { useApi } from '../hooks/useApi'
 import { readPageParam } from '../lib/page-param'
 
@@ -20,11 +20,7 @@ export default function HomePage() {
 
   return (
     <section className="space-y-8">
-      <div className="space-y-4">
-        <h1 className="text-3xl font-bold">Welcome to Dine N Dash</h1>
-        <p className="text-gray-600">Search restaurants, book a table and leave reviews.</p>
-        <SearchBar />
-      </div>
+      <HomeHero />
 
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Recommended restaurants</h2>
