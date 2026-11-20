@@ -70,6 +70,11 @@ export function searchRestaurants(search: RestaurantSearch): Promise<PagedRespon
   return api.get<PagedResponse<Restaurant>>(`/api/restaurant?${toQuery({ ...search })}`)
 }
 
+// The restaurants most like this one, nearest first
+export function getSimilarRestaurants(id: number, count = 5): Promise<Restaurant[]> {
+  return api.get<Restaurant[]>(`/api/restaurant/${id}/similar?${toQuery({ count })}`)
+}
+
 // Resolves to null when no restaurant has that id
 export async function getRestaurant(id: number): Promise<Restaurant | null> {
   try {
