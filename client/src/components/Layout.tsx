@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { useAuth } from '../context/useAuth'
 import { dashboardFor, ROUTES } from '../routes'
 import { buttonClass } from '../lib/button-styles'
+import Logo from './Logo'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded px-3 py-2 text-sm font-medium transition ${
@@ -30,8 +31,8 @@ export default function Layout() {
     <div className="flex min-h-screen flex-col bg-gray-50 text-gray-900">
       <header className="border-b border-gray-200 bg-white">
         <nav className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-3">
-          <Link to={isOwner ? ROUTES.restaurantDashboard : ROUTES.home} className="text-xl font-bold text-orange-600">
-            Dine N Dash
+          <Link to={isOwner ? ROUTES.restaurantDashboard : ROUTES.home}>
+            <Logo />
           </Link>
           <div className="flex items-center gap-1">
             {!isOwner && (
