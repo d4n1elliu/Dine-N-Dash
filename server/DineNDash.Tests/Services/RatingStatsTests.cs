@@ -3,9 +3,6 @@ using DineNDash.Core.Services;
 
 namespace DineNDash.Tests.Services;
 
-/// <summary>
-/// Covers per-restaurant rating summaries
-/// </summary>
 public class RatingStatsTests
 {
     private static Review Review(int restaurantId, int rating) => new() { RestaurantId = restaurantId, Rating = rating };
@@ -31,5 +28,17 @@ public class RatingStatsTests
         var summaries = RatingStats.ByRestaurant([Review(1, 4)]);
 
         Assert.That(summaries.GetValueOrDefault(99), Is.EqualTo(new RatingSummary(0, 0)));
+    }
+
+    [Test]
+    public void GlobalMean_AveragesEveryReview()
+    {
+        Assert.That(RatingStats.GlobalMean([Review(1, 5), Review(1, 3), Review(2, 1)]), Is.EqualTo(3));
+    }
+
+    [Test]
+    public void GlobalMean_NoReviews_IsZero()
+    {
+        Assert.That(RatingStats.GlobalMean([]), Is.EqualTo(0));
     }
 }

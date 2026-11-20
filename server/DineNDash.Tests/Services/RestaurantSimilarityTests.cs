@@ -4,9 +4,6 @@ using DineNDash.Core.Services;
 
 namespace DineNDash.Tests.Services;
 
-/// <summary>
-/// Covers the restaurant distance and its tie-breaker
-/// </summary>
 public class RestaurantSimilarityTests
 {
     private static RestaurantFeatures Features(
@@ -103,6 +100,27 @@ public class RestaurantSimilarityTests
         Assert.That(
             RestaurantSimilarity.Distance(target, cheapThai),
             Is.LessThan(RestaurantSimilarity.Distance(target, expensiveItalian)));
+    }
+
+    [Test]
+    public void ToFeatures_ReviewedRestaurant_UsesItsRatingSummary()
+    {
+        var restaurant = new Restaurant { Id = 1 };
+        var ratings = new Dictionary<int, RatingSummary> { [1] = new(4.5, 8) };
+
+        var features = RestaurantSimilarity.ToFeatures(restaurant, ratings, 3);
+
+        Assert.That(features, Is.EqualTo(new RestaurantFeatures(restaurant, 4.5, 8)));
+    }
+
+    [Test]
+    public void ToFeatures_UnreviewedRestaurant_UsesNeutralRatingAndZeroReviews()
+    {
+        var restaurant = new Restaurant { Id = 1 };
+
+        var features = RestaurantSimilarity.ToFeatures(restaurant, new Dictionary<int, RatingSummary>(), 3);
+
+        Assert.That(features, Is.EqualTo(new RestaurantFeatures(restaurant, 3, 0)));
     }
 
     [Test]

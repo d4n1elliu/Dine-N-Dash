@@ -2,14 +2,8 @@ using DineNDash.Core.Models;
 
 namespace DineNDash.Core.Services;
 
-/// <summary>
-/// A restaurant's average rating and review count
-/// </summary>
 public readonly record struct RatingSummary(double Average, int Count);
 
-/// <summary>
-/// Rating calculations shared by the restaurant features
-/// </summary>
 public static class RatingStats
 {
     /// <summary>
@@ -19,4 +13,10 @@ public static class RatingStats
         reviews.GroupBy(review => review.RestaurantId)
                .ToDictionary(group => group.Key,
                              group => new RatingSummary(group.Average(review => review.Rating), group.Count()));
+
+    /// <summary>
+    /// Average rating across every review, or 0 when there are none
+    /// </summary>
+    public static double GlobalMean(IEnumerable<Review> reviews) =>
+        reviews.Select(review => (double)review.Rating).DefaultIfEmpty(0).Average();
 }
