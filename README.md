@@ -1,3 +1,5 @@
+<img src="docs/brand/logo-lockup.png" alt="Dine N Dash" width="320" />
+
 # Dine N Dash
 
 An online restaurant searching and reservation service.
@@ -14,6 +16,7 @@ An online restaurant searching and reservation service.
 - Customer dashboard for bookings, reviews, bookmarks and profile details
 - Restaurant owner dashboard for menus, photos and incoming bookings
 - Input validation and clear error messages throughout
+- Dine N Dash branding with a logo, favicon and home page hero
 
 ## Tech Stack
 
@@ -54,12 +57,19 @@ Dine-N-Dash/
 ├── LICENSE                              MIT license for the source code
 ├── docker-compose.yml                   Runs PostgreSQL in Docker
 ├── README.md
+├── docs/
+│   └── brand/                           Logo lockup and cover image, not used by the app
 ├── scripts/
 │   └── setup-backend-env.sh             Creates .env and stores backend settings in User Secrets
 ├── client/                              React frontend
 │   ├── public/
+│   │   ├── apple-touch-icon.png         Home screen icon for iPhone and iPad
+│   │   ├── favicon-32.png               Browser tab icon for browsers without SVG support
 │   │   ├── favicon.svg                  Browser tab icon
-│   │   └── icons.svg                    Icon sprite
+│   │   ├── icons.svg                    Icon sprite
+│   │   ├── logo-mark-192.png            Logo mark, 192px
+│   │   ├── logo-mark-512.png            Logo mark, 512px
+│   │   └── logo-mark.svg                Logo mark shown in the header
 │   ├── src/
 │   │   ├── api/                         API client and request helpers
 │   │   ├── components/                  Shared components such as Layout and ProtectedRoute
