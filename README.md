@@ -8,6 +8,7 @@ An online restaurant searching and reservation service.
 - Search restaurants by name, cuisine and location
 - Filter and sort results
 - View restaurant details, photos and menus
+- See similar restaurants on each restaurant page
 - Book a table and manage bookings
 - Leave reviews and ratings
 - Customer dashboard for bookings, reviews, bookmarks and profile details
@@ -236,15 +237,24 @@ Secrets are never stored in the repository.
 
 The website is deployed on a VPS. Only code merged into `main` is deployed.
 
-## Future Work
+## Similar Restaurants (KNN)
 
-### Restaurant recommendations (KNN)
+Each restaurant page shows up to five restaurants most like the one being viewed. A cheap Thai place in Newtown recommends other cheap Thai or nearby restaurants with similar ratings.
 
-- Planned as a bonus feature but not implemented due to time constraints.
+**How it works**
 
-**What it does**
+KNN (k-nearest neighbours) is an algorithm that finds the k items most similar to a given item by measuring how close their features are.
 
-KNN (k-nearest neighbours) is an algorithm that finds the k items most similar to a given item by measuring how close their features are. Here it would show the five restaurants most similar to the one being viewed, based on cuisine, suburb, price range and average rating. A cheap Thai place in Newtown would recommend other cheap Thai or nearby restaurants with similar ratings.
+Here, every other restaurant is compared with the one being viewed on four things, from most to least important:
+
+1. Cuisine
+2. Price level
+3. Suburb
+4. Average rating
+
+The closer two restaurants are on these, the more similar they are. The five most similar are shown, closest first.
+
+A restaurant with no reviews yet is treated as having an average rating, so it can still be recommended.
 
 ## Team
 
