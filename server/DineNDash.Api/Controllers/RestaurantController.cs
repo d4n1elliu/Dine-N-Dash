@@ -43,6 +43,16 @@ public class RestaurantController : ControllerBase
     }
 
     /// <summary>
+    /// Lists the restaurants most similar to this one by cuisine, suburb, price and rating, nearest first
+    /// </summary>
+    [HttpGet("{id}/similar")]
+    public async Task<IActionResult> GetSimilar(int id, int count = 5)
+    {
+        var results = await _restaurantService.GetSimilarAsync(id, count);
+        return Ok(results.Select(ToResponse));
+    }
+
+    /// <summary>
     /// Returns one restaurant by id
     /// </summary>
     [HttpGet("{id}")]

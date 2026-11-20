@@ -32,3 +32,9 @@ GET {{DineNDash.Api_HostAddress}}/api/auth/me
 Authorization: Bearer <token>
 
 ###
+
+# Up to 5 restaurants most similar to restaurant 1; count is optional (1 to 10)
+GET {{DineNDash.Api_HostAddress}}/api/restaurant/1/similar?count=5
+Accept: application/json
+
+###
