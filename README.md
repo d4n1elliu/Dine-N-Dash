@@ -5,7 +5,8 @@ An online restaurant searching and reservation service.
 ## Key Features
 
 - Separate accounts for diners and restaurant owners
-- Search restaurants by name, cuisine and location
+- Landing page for guests with recommended restaurants
+- Search restaurants by name, cuisine and suburb
 - Filter and sort results
 - View restaurant details, photos and menus
 - See similar restaurants on each restaurant page
