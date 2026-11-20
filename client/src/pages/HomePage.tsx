@@ -1,35 +1,33 @@
-import { useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import { getRecommendedRestaurants } from '../api/restaurants'
+import GuestRecommended from '../components/GuestRecommended'
 import HomeHero from '../components/HomeHero'
-import RestaurantResults from '../components/RestaurantResults'
-import { useApi } from '../hooks/useApi'
-import { readPageParam } from '../lib/page-param'
+import PagedRecommended from '../components/PagedRecommended'
+import { useAuth } from '../context/useAuth'
+import { HERO_PHOTO_COUNT } from '../lib/home-hero'
 
+const GUEST_CARD_COUNT = 6
+
+const fetchTopPhotos = async () => (await getRecommendedRestaurants(1, HERO_PHOTO_COUNT)).items
+// The page after the guest cards, so the hero never repeats a restaurant shown below it
+const fetchPhotosAfterGuestCards = async () => (await getRecommendedRestaurants(2, GUEST_CARD_COUNT)).items
+
+// Guests get a short landing page; signed in customers get the full paginated list
 export default function HomePage() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const page = readPageParam(searchParams)
-
-  const fetchRecommended = useCallback(() => getRecommendedRestaurants(page), [page])
-  const recommended = useApi(fetchRecommended)
-
-  function handlePageChange(nextPage: number) {
-    setSearchParams(nextPage > 1 ? { page: String(nextPage) } : {})
-    window.scrollTo({ top: 0 })
-  }
+  const { isAuthenticated } = useAuth()
 
   return (
     <section className="space-y-8">
-      <HomeHero />
-
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Recommended restaurants</h2>
-        <RestaurantResults
-          results={recommended}
-          emptyMessage="No restaurants yet. Check back soon."
-          onPageChange={handlePageChange}
-        />
-      </div>
+      {isAuthenticated ? (
+        <>
+          <HomeHero key="customer" fetchPhotos={fetchTopPhotos} />
+          <PagedRecommended />
+        </>
+      ) : (
+        <>
+          <HomeHero key="guest" fetchPhotos={fetchPhotosAfterGuestCards} />
+          <GuestRecommended count={GUEST_CARD_COUNT} />
+        </>
+      )}
     </section>
   )
 }

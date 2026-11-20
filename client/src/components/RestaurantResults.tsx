@@ -6,7 +6,8 @@ import RestaurantGrid from './RestaurantGrid'
 interface RestaurantResultsProps {
   results: ApiState<PagedResponse<Restaurant>>
   emptyMessage: string
-  onPageChange: (page: number) => void
+  // Leave out to show the results without page controls
+  onPageChange?: (page: number) => void
 }
 
 // Shared by the home and search pages: loading, error and empty states, the card grid and page controls
@@ -20,7 +21,7 @@ export default function RestaurantResults({ results, emptyMessage, onPageChange 
   return (
     <div className="space-y-6">
       <RestaurantGrid restaurants={items} />
-      <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
+      {onPageChange && <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />}
     </div>
   )
 }

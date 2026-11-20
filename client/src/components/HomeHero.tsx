@@ -1,21 +1,22 @@
 import { Link } from 'react-router-dom'
-import { getRecommendedRestaurants, type Restaurant } from '../api/restaurants'
+import type { Restaurant } from '../api/restaurants'
 import { useApi } from '../hooks/useApi'
+import { HERO_PHOTO_COUNT } from '../lib/home-hero'
 import { restaurantPath } from '../routes'
 import RestaurantImage from './RestaurantImage'
 import SearchBar from './SearchBar'
 
-const PHOTO_COUNT = 4
+interface HomeHeroProps {
+  // Must be a stable function. Only the first few restaurants it returns are shown
+  fetchPhotos: () => Promise<Restaurant[]>
+}
 
-// Always the top restaurants, whichever page of the list below is showing
-const fetchTopRestaurants = () => getRecommendedRestaurants(1, PHOTO_COUNT)
-
-export default function HomeHero() {
-  const top = useApi(fetchTopRestaurants)
-  const restaurants = top.data?.items ?? []
-  const showPhotos = restaurants.length === PHOTO_COUNT
+export default function HomeHero({ fetchPhotos }: HomeHeroProps) {
+  const photos = useApi(fetchPhotos)
+  const restaurants = (photos.data ?? []).slice(0, HERO_PHOTO_COUNT)
+  const showPhotos = restaurants.length === HERO_PHOTO_COUNT
   // Keep the second column while loading so the heading doesn't rewrap when the photos arrive
-  const twoColumns = top.loading || showPhotos
+  const twoColumns = photos.loading || showPhotos
 
   return (
     <div className={`grid items-center gap-8 lg:py-6 ${twoColumns ? 'lg:grid-cols-2' : ''}`}>
