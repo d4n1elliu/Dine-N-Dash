@@ -12,7 +12,9 @@ const SORT_OPTIONS: { value: RestaurantSort; label: string }[] = [
   { value: 'price', label: 'Price' },
 ]
 
-const selectClass = 'rounded border border-gray-300 bg-white px-3 py-2 text-sm focus:border-orange-500 focus:outline-none'
+const filterLabelClass = 'text-sm font-medium'
+const selectClass =
+  'h-10 w-40 rounded border border-gray-300 bg-white pl-3 pr-8 text-sm focus:border-orange-500 focus:outline-none'
 
 function readCuisine(value: string | null): Cuisine | undefined {
   return CUISINES.find((cuisine) => cuisine === value)
@@ -58,10 +60,13 @@ export default function SearchPage() {
 
       <div className="space-y-3">
         <SearchBar key={name} initialValue={name} onSearch={(query) => updateParam('name', query)} />
-        <div className="flex flex-wrap gap-3">
-          <label className="flex items-center gap-2 text-sm font-medium">
-            Cuisine
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+          <div className="flex items-center gap-3">
+            <label htmlFor="cuisine-filter" className={filterLabelClass}>
+              Cuisine
+            </label>
             <select
+              id="cuisine-filter"
               value={cuisine ?? ''}
               onChange={(e) => updateParam('cuisine', e.target.value)}
               className={selectClass}
@@ -73,10 +78,13 @@ export default function SearchPage() {
                 </option>
               ))}
             </select>
-          </label>
-          <label className="flex items-center gap-2 text-sm font-medium">
-            Sort by
+          </div>
+          <div className="flex items-center gap-3">
+            <label htmlFor="sort-filter" className={filterLabelClass}>
+              Sort by
+            </label>
             <select
+              id="sort-filter"
               value={sortBy}
               onChange={(e) => updateParam('sortBy', e.target.value === 'name' ? '' : e.target.value)}
               className={selectClass}
@@ -87,7 +95,7 @@ export default function SearchPage() {
                 </option>
               ))}
             </select>
-          </label>
+          </div>
         </div>
       </div>
 
