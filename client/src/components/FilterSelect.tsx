@@ -20,7 +20,7 @@ export default function FilterSelect({ id, label, value, onChange, children }: F
           id={id}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="h-10 w-40 appearance-none rounded border border-gray-300 bg-white pr-9 pl-3 text-center text-sm focus:border-orange-500 focus:outline-none"
+          className="h-9 appearance-none rounded border border-gray-300 bg-white pr-9 pl-3 text-sm focus:border-orange-500 focus:outline-none"
         >
           {children}
         </select>
