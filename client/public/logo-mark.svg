@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Dine N Dash">
+  <rect width="64" height="64" rx="14" fill="#EA580C"/>
+  <g transform="translate(2 -1.5)" fill="#fff">
+    <path d="M18 42 A18 18 0 0 1 54 42 Z"/>
+    <circle cx="36" cy="21" r="3"/>
+    <rect x="14" y="45" width="44" height="4" rx="2"/>
+    <rect x="6" y="27.5" width="10" height="3.5" rx="1.75"/>
+    <rect x="2" y="34.5" width="11" height="3.5" rx="1.75"/>
+  </g>
+</svg>
