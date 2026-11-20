@@ -51,6 +51,7 @@ Dine-N-Dash/
 ├── .gitignore
 ├── CONTRIBUTING.md                      Team workflow and conventions
 ├── DineNDash.sln                        Solution file, open this in Visual Studio 2026
+├── LICENSE                              MIT license for the source code
 ├── docker-compose.yml                   Runs PostgreSQL in Docker
 ├── README.md
 ├── scripts/
@@ -263,3 +264,9 @@ A restaurant with no reviews yet is treated as having an average rating, so it c
 | Daniel Liu | Code Quality, Code Requirements | Project setup, backend architecture, database with Entity Framework, core models and interfaces, API client, routing and auth state, register, login and JWT authentication, sign up page |
 | Sun Woo Kim | FullStack SWE | Recommended restaurants, search restaurants, edit restaurant profile, edit restaurant menu, deployment |
 | Gurpreet Kaur | Interface Design, Code Requirements | Bookings, Reviews, Customer dashboard, Owner analytics |
+
+## License
+
+The source code is released under the [MIT License](LICENSE).
+
+The license covers the code only. The restaurant photos in `server/DineNDash.Api/Seed/Images` and the restaurant names belong to their owners and are not covered by it.
