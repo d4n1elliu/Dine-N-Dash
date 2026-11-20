@@ -1,7 +1,7 @@
 import type { PagedResponse, Restaurant } from '../api/restaurants'
 import type { ApiState } from '../hooks/useApi'
 import Pagination from './Pagination'
-import RestaurantCard from './RestaurantCard'
+import RestaurantGrid from './RestaurantGrid'
 
 interface RestaurantResultsProps {
   results: ApiState<PagedResponse<Restaurant>>
@@ -19,13 +19,7 @@ export default function RestaurantResults({ results, emptyMessage, onPageChange 
 
   return (
     <div className="space-y-6">
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((restaurant) => (
-          <li key={restaurant.id}>
-            <RestaurantCard restaurant={restaurant} />
-          </li>
-        ))}
-      </ul>
+      <RestaurantGrid restaurants={items} />
       <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
     </div>
   )
