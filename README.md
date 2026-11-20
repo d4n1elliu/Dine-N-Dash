@@ -1,5 +1,3 @@
-<img src="docs/brand/logo-lockup.png" alt="Dine N Dash" width="320" />
-
 # Dine N Dash
 
 An online restaurant searching and reservation service.
