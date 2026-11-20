@@ -106,6 +106,7 @@ export default function SearchPage() {
         results={results}
         emptyMessage="No restaurants match your search."
         onPageChange={handlePageChange}
+        onRetry={results.reload}
       />
     </section>
   )

@@ -14,7 +14,12 @@ export default function GuestRecommended({ count }: { count: number }) {
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Recommended restaurants</h2>
-      <RestaurantResults results={recommended} emptyMessage="No restaurants yet. Check back soon." />
+      <RestaurantResults
+        results={recommended}
+        emptyMessage="No restaurants yet. Check back soon."
+        skeletonCount={count}
+        onRetry={recommended.reload}
+      />
       <p className="text-center">
         <Link to={ROUTES.search} className={`inline-block ${buttonClass()}`}>
           View all restaurants

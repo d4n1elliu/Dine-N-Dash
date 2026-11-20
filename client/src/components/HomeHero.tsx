@@ -24,7 +24,18 @@ export default function HomeHero({ fetchPhotos }: HomeHeroProps) {
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">Find your next table.</h1>
         <SearchBar />
       </div>
+      {photos.loading && <PhotoGridSkeleton />}
       {showPhotos && <PhotoGrid restaurants={restaurants} />}
+    </div>
+  )
+}
+
+function PhotoGridSkeleton() {
+  return (
+    <div aria-hidden="true" className="grid animate-pulse grid-cols-2 gap-3">
+      {Array.from({ length: HERO_PHOTO_COUNT }, (_, index) => (
+        <div key={index} className="aspect-[5/4] rounded-xl bg-gray-200" />
+      ))}
     </div>
   )
 }

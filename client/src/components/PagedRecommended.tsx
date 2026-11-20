@@ -25,6 +25,7 @@ export default function PagedRecommended() {
         results={recommended}
         emptyMessage="No restaurants yet. Check back soon."
         onPageChange={handlePageChange}
+        onRetry={recommended.reload}
       />
     </div>
   )
